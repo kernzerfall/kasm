@@ -5,17 +5,11 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
-#[allow(dead_code)]
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
 pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
-#[allow(dead_code)]
 pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
-#[allow(dead_code)]
 pub const UNPACK_CSV_FILENAME: &str = "filtered.csv";
-#[allow(dead_code)]
 pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";
-#[allow(dead_code)]
-pub const UNPACK_SLAVE_CFG_FILENAME: &str = "kasm.slave.toml";
 
 /// Tells us whether the zip we're extracting contains groupped or individual
 /// submissions, as well as whether we want to repack it as one or the other.
