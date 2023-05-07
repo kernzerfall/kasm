@@ -4,6 +4,9 @@ use std::path::PathBuf;
 
 #[derive(Parser, Clone, Debug, Default)]
 pub struct UnpackFiles {
+    #[arg(short, long = "sheet", value_name = "sheet")]
+    pub sheet_id: String,
+
     /// Path to the .zip downloaded from moodle
     #[arg(short = 'z', long, value_name = "/path/to/zip")]
     pub moodle_zip: PathBuf,
