@@ -1,7 +1,11 @@
 mod args;
 mod config;
 mod init;
+mod unpack;
 use clap::Parser;
+use config::Structure;
+use unpack::unpack;
+mod gradingtable;
 
 use args::Verb;
 use config::Grades;
@@ -22,6 +26,18 @@ fn main() {
         return;
     }
 
-    let _master = MasterCfg::resolve().expect("master config");
+    let master = MasterCfg::resolve().expect("master config");
+
+    if master.unpack_structure != Structure::Groups {
+        panic!("Only unpack_structure = \"Groups\" is currently supported.");
+    }
+
     let _grades = Grades::resolve();
+
+    match command.verb {
+        Verb::Unpack(cfg) => {
+            unpack(&master, &cfg).unwrap();
+        }
+        _ => todo!(),
+    }
 }
