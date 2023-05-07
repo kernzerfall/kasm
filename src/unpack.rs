@@ -83,7 +83,7 @@ fn gen_grading_files(
             if master.unpack_structure == Structure::Groups {
                 grades_arr.push(Grade {
                     target: r.group.to_owned(),
-                    grade: r.best_grade.to_owned(),
+                    grade: r.grade.to_owned(),
                 })
             }
         }
