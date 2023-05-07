@@ -9,7 +9,7 @@ use strum::Display;
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
 pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
 #[allow(dead_code)]
-pub const UNPACK_PATH_FILENAME_HB: &str = "unpack_{{sheet-id}}";
+pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
 #[allow(dead_code)]
 pub const UNPACK_CSV_FILENAME: &str = "original.csv";
 #[allow(dead_code)]
