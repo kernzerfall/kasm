@@ -63,14 +63,16 @@ pub struct MasterCfg {
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grades {
     #[serde(skip)]
-    location: PathBuf,
-    map: Vec<Grade>,
+    pub location: PathBuf,
+
+    pub sheet_id: String,
+    pub map: Vec<Grade>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grade {
-    r#for: String,
-    grade: String,
+    pub target: String,
+    pub grade: String,
 }
 
 fn find_in_preceding_dir_tree(filename: &str) -> Result<PathBuf, Box<dyn Error>> {
