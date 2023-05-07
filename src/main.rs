@@ -1,15 +1,19 @@
 mod args;
 mod config;
+mod grade;
 mod init;
 mod unpack;
 use clap::Parser;
 use config::Structure;
+use grade::grade;
 use unpack::unpack;
 mod gradingtable;
 
+use crate::config::UNPACK_GRADES_FILENAME;
 use args::Verb;
 use config::Grades;
 use config::MasterCfg;
+use log::error;
 
 const DEF_LOG_LEVEL: &str = "debug";
 const ENV_LOG_LEVEL: &str = "RUST_LOG";
@@ -32,11 +36,18 @@ fn main() {
         panic!("Only unpack_structure = \"Groups\" is currently supported.");
     }
 
-    let _grades = Grades::resolve();
+    let grades = Grades::resolve();
 
     match command.verb {
         Verb::Unpack(cfg) => {
             unpack(&master, &cfg).unwrap();
+        }
+        Verb::Grade(cfg) => {
+            if let Ok(grades) = grades {
+                grade(&master, &cfg, &grades).unwrap()
+            } else {
+                error!("{} could not be found!", UNPACK_GRADES_FILENAME);
+            }
         }
         _ => todo!(),
     }
