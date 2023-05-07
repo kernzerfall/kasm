@@ -17,13 +17,8 @@ pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";
 #[allow(dead_code)]
 pub const UNPACK_SLAVE_CFG_FILENAME: &str = "kasm.slave.toml";
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct SlaveConfig {
-    sheet_id: String,
-    csv_path: PathBuf,
-    unpack_path: PathBuf,
-}
-
+/// Tells us whether the zip we're extracting contains groupped or individual
+/// submissions, as well as whether we want to repack it as one or the other.
 #[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq)]
 pub enum Structure {
     #[default]
@@ -31,6 +26,8 @@ pub enum Structure {
     Individuals,
 }
 
+/// Definition of the master config file
+/// (default: kasm.toml)
 #[derive(Parser, Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MasterCfg {
     #[serde(skip)]
@@ -60,21 +57,36 @@ pub struct MasterCfg {
     pub repack_structure: Structure,
 }
 
+/// Nested grades.toml definition
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grades {
+    /// We save internally where we found the file so
+    /// that we don't need to search for it again when
+    /// we want to overwrite it later.
     #[serde(skip)]
     pub location: PathBuf,
 
+    /// Sheed Identificator
+    /// e.g. 04
     pub sheet_id: String,
+
+    /// Grade maps
+    /// target (matrnr/group_id) -> grade
     pub map: Vec<Grade>,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grade {
+    /// Full team name/matrnr that the grade corresponds to
     pub target: String,
+
+    /// The grade to assign the group, should be formatted
+    /// as Moodle wants it to be formatted
+    /// e.g. 10,5 or 10,0
     pub grade: String,
 }
 
+/// Walks upwards the directory tree and tries to find `filename`
 fn find_in_preceding_dir_tree(filename: &str) -> Result<PathBuf, Box<dyn Error>> {
     let mut path = std::env::current_dir()?;
 
@@ -91,6 +103,7 @@ fn find_in_preceding_dir_tree(filename: &str) -> Result<PathBuf, Box<dyn Error>>
 }
 
 impl MasterCfg {
+    /// Finds/parses the master config
     pub fn resolve() -> Result<MasterCfg, Box<dyn Error>> {
         let cfg_path = find_in_preceding_dir_tree(MASTER_CFG_FILENAME)?;
         let mut cfg = toml::from_str::<MasterCfg>(&std::fs::read_to_string(cfg_path.clone())?)?;
@@ -100,6 +113,7 @@ impl MasterCfg {
 }
 
 impl Grades {
+    /// Finds/parses the nested grades config
     pub fn resolve() -> Result<Grades, Box<dyn Error>> {
         let cfg_path = find_in_preceding_dir_tree(UNPACK_GRADES_FILENAME)?;
         let mut cfg = toml::from_str::<Grades>(&std::fs::read_to_string(cfg_path.clone())?)?;
