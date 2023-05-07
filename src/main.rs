@@ -4,6 +4,7 @@ mod init;
 use clap::Parser;
 
 use args::Verb;
+use config::Grades;
 use config::MasterCfg;
 
 const DEF_LOG_LEVEL: &str = "debug";
@@ -22,4 +23,5 @@ fn main() {
     }
 
     let _master = MasterCfg::resolve().expect("master config");
+    let _grades = Grades::resolve();
 }

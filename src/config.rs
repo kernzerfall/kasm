@@ -60,6 +60,19 @@ pub struct MasterCfg {
     pub repack_structure: Structure,
 }
 
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct Grades {
+    #[serde(skip)]
+    location: PathBuf,
+    map: Vec<Grade>,
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct Grade {
+    r#for: String,
+    grade: String,
+}
+
 fn find_in_preceding_dir_tree(filename: &str) -> Result<PathBuf, Box<dyn Error>> {
     let mut path = std::env::current_dir()?;
 
@@ -79,6 +92,15 @@ impl MasterCfg {
     pub fn resolve() -> Result<MasterCfg, Box<dyn Error>> {
         let cfg_path = find_in_preceding_dir_tree(MASTER_CFG_FILENAME)?;
         let mut cfg = toml::from_str::<MasterCfg>(&std::fs::read_to_string(cfg_path.clone())?)?;
+        cfg.location = cfg_path;
+        Ok(cfg)
+    }
+}
+
+impl Grades {
+    pub fn resolve() -> Result<Grades, Box<dyn Error>> {
+        let cfg_path = find_in_preceding_dir_tree(UNPACK_GRADES_FILENAME)?;
+        let mut cfg = toml::from_str::<Grades>(&std::fs::read_to_string(cfg_path.clone())?)?;
         cfg.location = cfg_path;
         Ok(cfg)
     }
