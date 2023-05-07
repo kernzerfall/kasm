@@ -1,18 +1,20 @@
 mod args;
 mod config;
 mod grade;
+mod gradingtable;
 mod init;
+mod repack;
 mod unpack;
+
 use clap::Parser;
 use config::Structure;
 use grade::grade;
 use unpack::unpack;
-mod gradingtable;
 
-use crate::config::UNPACK_GRADES_FILENAME;
 use args::Verb;
 use config::Grades;
 use config::MasterCfg;
+use config::UNPACK_GRADES_FILENAME;
 use log::error;
 
 const DEF_LOG_LEVEL: &str = "debug";
@@ -30,10 +32,25 @@ fn main() {
         return;
     }
 
-    let master = MasterCfg::resolve().expect("master config");
+    let master = match MasterCfg::resolve() {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            error!("MasterCfg::resolve() returned error {:?}", e);
+            error!("could not read config. run \"kasm init\" first!");
+            panic!()
+        }
+    };
 
     if master.unpack_structure != Structure::Groups {
         panic!("Only unpack_structure = \"Groups\" is currently supported.");
+    }
+
+    if master.repack_structure != Structure::Individuals {
+        panic!("Only repack_structure = \"Individuals\" is currently supported.")
+    }
+
+    if master.recursive_unzip {
+        error!("recursive unzip is not implemented yet, continuing");
     }
 
     let grades = Grades::resolve();

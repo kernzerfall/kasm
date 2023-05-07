@@ -8,7 +8,7 @@ use strum::Display;
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
 pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
 pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
-pub const UNPACK_CSV_FILENAME: &str = "filtered.csv";
+pub const UNPACK_CSV_FILENAME: &str = ".filtered.csv";
 pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";
 
 /// Tells us whether the zip we're extracting contains groupped or individual
@@ -47,7 +47,7 @@ pub struct MasterCfg {
     #[arg(long, value_name = "struct", default_value = "groups")]
     pub unpack_structure: Structure,
 
-    #[arg(long, value_name = "struct", default_value = "groups")]
+    #[arg(long, value_name = "struct", default_value = "individuals")]
     pub repack_structure: Structure,
 }
 
