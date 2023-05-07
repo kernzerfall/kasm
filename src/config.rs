@@ -7,7 +7,7 @@ use strum::Display;
 
 #[allow(dead_code)]
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
-pub const DEFAULT_GROUPS_REGEX: &str = r#"\([0-9]{2}\).+\([0-9]{2}\)"#;
+pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
 #[allow(dead_code)]
 pub const UNPACK_PATH_FILENAME_HB: &str = "unpack_{{sheet-id}}";
 #[allow(dead_code)]
