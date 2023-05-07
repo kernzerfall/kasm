@@ -11,7 +11,7 @@ pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
 #[allow(dead_code)]
 pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
 #[allow(dead_code)]
-pub const UNPACK_CSV_FILENAME: &str = "original.csv";
+pub const UNPACK_CSV_FILENAME: &str = "filtered.csv";
 #[allow(dead_code)]
 pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";
 #[allow(dead_code)]
