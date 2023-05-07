@@ -51,11 +51,9 @@ pub enum Verb {
     /// Unpack/filter moodle zip using a csv file
     Unpack(UnpackFiles),
     /// Repack the zip to publish feedback/grades
-    Repack,
+    Repack(RepackDir),
     /// Initialize the master config file
     Init(MasterCfg),
-    /// Copy config from other location
-    CopyConfig,
     /// Grade team
     Grade(GradeCmd),
 }
