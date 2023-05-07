@@ -6,7 +6,11 @@ edition = "2021"
 authors = ["kernzerfall <me@georgar.de>"]
 license = "EUPL-1.2-or-later"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+strip = true
+opt-level = "z" # We can afford -Oz since the binary is "fast enough" anyway
+lto = true
+codegen-units = 1
 
 [dependencies]
 clap = { version = "4.2.7", features = ["derive"] }
@@ -17,4 +21,4 @@ regex = "1.8.1"
 serde = { version = "1.0.162", features = ["serde_derive", "derive"] }
 strum = { version = "0.24.1", features = ["derive"] }
 toml = "0.7.3"
-zip = "0.6.4"
+zip = { version = "0.6.4", default-features = false, features = ["deflate", "time"] }
