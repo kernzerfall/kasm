@@ -24,7 +24,7 @@ struct SlaveConfig {
     unpack_path: PathBuf,
 }
 
-#[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize)]
+#[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq)]
 pub enum Structure {
     #[default]
     Groups,
