@@ -10,6 +10,7 @@ license = "EUPL-1.2"
 
 [dependencies]
 clap = { version = "4.2.7", features = ["derive"] }
+csv = "1.2.1"
 handlebars = { version = "4.3.6", features = ["walkdir"] }
 log = "0.4.17"
 pretty_env_logger = "0.4.0"
