@@ -1,22 +1,20 @@
 [package]
 name = "kasm"
-description = "[k]asm (is) Another Submission Multitool"
+description = "kasm (is) Another Submission Multitool"
 version = "0.1.0"
 edition = "2021"
 authors = ["kernzerfall <me@georgar.de>"]
-license = "EUPL-1.2"
+license = "EUPL-1.2-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = { version = "4.2.7", features = ["derive"] }
 csv = "1.2.1"
-handlebars = { version = "4.3.6", features = ["walkdir"] }
 log = "0.4.17"
 pretty_env_logger = "0.4.0"
 regex = "1.8.1"
 serde = { version = "1.0.162", features = ["serde_derive", "derive"] }
 strum = { version = "0.24.1", features = ["derive"] }
-texrender = "0.3.3"
 toml = "0.7.3"
 zip = "0.6.4"
