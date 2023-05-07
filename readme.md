@@ -2,8 +2,10 @@
 <div align=center>
 kasm (is) Another Submission Multitool (for Moodle). Pronounced <i>chasm</i>.
 </div>
+
+<br>
 <div align=center>
-![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)
+<img src="https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white" />
 </div>
 
 ## Installation
