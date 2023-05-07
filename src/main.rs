@@ -9,6 +9,7 @@ mod unpack;
 use clap::Parser;
 use config::Structure;
 use grade::grade;
+use repack::repack;
 use unpack::unpack;
 
 use args::Verb;
@@ -66,6 +67,9 @@ fn main() {
                 error!("{} could not be found!", UNPACK_GRADES_FILENAME);
             }
         }
-        _ => todo!(),
+        Verb::Repack(cfg) => {
+            repack(&master, &cfg).unwrap();
+        }
+        _ => panic!("unexpected verb"),
     }
 }
