@@ -1,6 +1,7 @@
-use std::path::PathBuf;
+use std::{error::Error, path::PathBuf};
 
 use clap::*;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
@@ -32,6 +33,10 @@ pub enum Structure {
 
 #[derive(Parser, Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MasterCfg {
+    #[serde(skip)]
+    #[clap(skip)]
+    pub location: PathBuf,
+
     /// Regex with for (group, team)
     #[arg(short = 'r', long = "regex", value_name = "expr", default_value = DEFAULT_GROUPS_REGEX)]
     pub groups_regex: String,
@@ -53,4 +58,28 @@ pub struct MasterCfg {
 
     #[arg(long, value_name = "struct", default_value = "groups")]
     pub repack_structure: Structure,
+}
+
+fn find_in_preceding_dir_tree(filename: &str) -> Result<PathBuf, Box<dyn Error>> {
+    let mut path = std::env::current_dir()?;
+
+    while !path.join(filename).is_file() {
+        if let Some(parent) = path.parent() {
+            path = parent.to_path_buf();
+        } else {
+            return Err("couldn't find file".into());
+        }
+    }
+
+    debug!("found {:?} under {:?}", filename, path);
+    Ok(path.join(filename))
+}
+
+impl MasterCfg {
+    pub fn resolve() -> Result<MasterCfg, Box<dyn Error>> {
+        let cfg_path = find_in_preceding_dir_tree(MASTER_CFG_FILENAME)?;
+        let mut cfg = toml::from_str::<MasterCfg>(&std::fs::read_to_string(cfg_path.clone())?)?;
+        cfg.location = cfg_path;
+        Ok(cfg)
+    }
 }
