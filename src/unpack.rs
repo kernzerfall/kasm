@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 use std::path::PathBuf;
@@ -54,8 +55,8 @@ pub fn unpack(master: &MasterCfg, cfg: &UnpackFiles) -> Result<(), Box<dyn Error
         master.group
     );
 
-    gen_grading_files(master, cfg, &unpack_path, filtered)?;
-    unzip_filter_main(master, cfg, &reg, &unpack_path)?;
+    let gids = unzip_filter_main(master, cfg, &reg, &unpack_path)?;
+    gen_grading_files(master, cfg, &unpack_path, filtered, &gids)?;
 
     Ok(())
 }
@@ -65,6 +66,7 @@ fn gen_grading_files(
     cfg: &UnpackFiles,
     unpack_path: &Path,
     filtered: Vec<&GradingRecord>,
+    gids: &HashMap<String, String>,
 ) -> Result<(), Box<dyn Error>> {
     let nested_csv_path = unpack_path.join(UNPACK_CSV_FILENAME);
     let mut grades_arr: Vec<Grade> = Vec::new();
@@ -83,6 +85,7 @@ fn gen_grading_files(
             if master.unpack_structure == Structure::Groups {
                 grades_arr.push(Grade {
                     target: r.group.to_owned(),
+                    internal_id: gids.get(&r.group).cloned(),
                     grade: r.grade.to_owned(),
                 })
             }
@@ -91,6 +94,7 @@ fn gen_grading_files(
         if master.unpack_structure == Structure::Individuals {
             grades_arr.push(Grade {
                 target: r.uni_id.to_owned(),
+                internal_id: r.internal_id.to_owned().into(),
                 grade: r.best_grade.to_owned(),
             });
         }
@@ -118,9 +122,10 @@ fn unzip_filter_main(
     cfg: &UnpackFiles,
     reg: &Regex,
     unpack_path: &Path,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<HashMap<String, String>, Box<dyn Error>> {
     info!("unzipping main zip file");
 
+    let mut res = HashMap::<String, String>::new();
     let file = std::fs::File::open(&cfg.moodle_zip)?;
     let mut archive = zip::ZipArchive::new(file)?;
 
@@ -133,16 +138,18 @@ fn unzip_filter_main(
                 .map_or(false, |cap| cap.as_str() == master.group)
         }) {
             let enclosed_path = curr.enclosed_name().unwrap();
-            let subdir = enclosed_path
+            let mut parts = enclosed_path
                 .components()
                 .next()
                 .unwrap()
                 .as_os_str()
                 .to_str()
                 .unwrap()
-                .split_once('_')
-                .unwrap()
-                .0;
+                .splitn(3, '_');
+            let subdir = parts.next().unwrap();
+            let groupid = parts.next().unwrap();
+
+            res.insert(subdir.to_string(), groupid.to_string());
 
             let extr = unpack_path
                 .join(subdir)
@@ -154,5 +161,5 @@ fn unzip_filter_main(
         };
     }
 
-    Ok(())
+    Ok(res)
 }

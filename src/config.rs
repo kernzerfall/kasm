@@ -74,6 +74,10 @@ pub struct Grade {
     /// Full team name/matrnr that the grade corresponds to
     pub target: String,
 
+    /// Internal Moodle ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub internal_id: Option<String>,
+
     /// The grade to assign the group, should be formatted
     /// as Moodle wants it to be formatted
     /// e.g. 10,5 or 10,0
