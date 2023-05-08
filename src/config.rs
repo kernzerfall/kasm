@@ -47,7 +47,7 @@ pub struct MasterCfg {
     #[arg(long, value_name = "struct", default_value = "groups")]
     pub unpack_structure: Structure,
 
-    #[arg(long, value_name = "struct", default_value = "individuals")]
+    #[arg(long, value_name = "struct", default_value = "groups")]
     pub repack_structure: Structure,
 }
 
