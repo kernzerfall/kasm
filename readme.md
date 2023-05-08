@@ -88,12 +88,9 @@ cargo install --locked --path .
 
 ### Soon™
 - [ ] Add script hooks
-- [ ] Support unpacking groups and then repacking groups
+- [x] ~~Support unpacking groups and then repacking groups~~
 - [ ] Support unpacking individuals and then repacking individuals
 - [ ] Support unpacking individuals and then groupping them
-
-(Currently, the only supported configuration is unpacking groups and then
-repacking individuals)
 
 ### Would be cool at some point I guess
 - [ ] Hardcode less stuff. Things like target directory names should be handled e.g. by Handlebars
@@ -105,7 +102,7 @@ repacking individuals)
 - Expects the moodle csv header to be *in German*. To change, edit
   `src/gradingtable.rs` and recompile.
 - No support for nested directiories inside teams' folders when repacking (probably not a problem).
-- As discussed [above](#soon), only group -> individual mapping is currently implemented.
+- As discussed [above](#soon), only group -> individual/group mapping is currently implemented.
 
 ## License
 Licensed under EUPL-1.2-or-later. See [license](license).
