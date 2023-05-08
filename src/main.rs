@@ -46,10 +46,6 @@ fn main() {
         panic!("Only unpack_structure = \"Groups\" is currently supported.");
     }
 
-    if master.repack_structure != Structure::Individuals {
-        panic!("Only repack_structure = \"Individuals\" is currently supported.")
-    }
-
     if master.recursive_unzip {
         error!("recursive unzip is not implemented yet, continuing");
     }

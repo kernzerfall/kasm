@@ -7,6 +7,7 @@ use std::{
     time::{self, UNIX_EPOCH},
 };
 
+use crate::config::Structure;
 use crate::{
     args::RepackDir,
     config::{
@@ -75,6 +76,34 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
     // Create the csv writer
     let mut csv_writer = csv::Writer::from_path(grading_csv_name)?;
 
+    let repack_fn = match (&master.unpack_structure, &master.repack_structure) {
+        (Structure::Groups, Structure::Groups) => repack_g2g,
+        (Structure::Groups, Structure::Individuals) => repack_g2i,
+        _ => todo!(),
+    };
+
+    repack_fn(
+        &unpacked_path,
+        &grading_table,
+        &grades,
+        &reg,
+        &internal_reg,
+        &mut zip_writer,
+        &zip_options,
+        &mut csv_writer,
+    )
+}
+
+pub fn repack_g2i(
+    unpacked_path: &PathBuf,
+    grading_table: &Vec<GradingRecord>,
+    grades: &Grades,
+    reg: &regex::Regex,
+    internal_reg: &regex::Regex,
+    zip_writer: &mut zip::ZipWriter<File>,
+    zip_options: &zip::write::FileOptions,
+    csv_writer: &mut csv::Writer<File>,
+) -> Result<(), Box<dyn Error>> {
     // Start packing stuff
     std::fs::read_dir(unpacked_path)?
         .filter_map(|entry| entry.ok())
@@ -87,7 +116,7 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
             debug!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_id = dir_name.to_str().unwrap();
-            collect_students_for_group(&grading_table, &grades, group_id)
+            collect_students_for_group(grading_table, grades, group_id)
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
@@ -97,10 +126,10 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
                     // Übungsgruppe AB -- Abgabeteam XY_Name, \
                     // Vorname-12345678_assignsubmission_file_
                     let dir_new_name: String = format!(
-                        "{groupid}-{s_name}_{s_id}_assignsubmission_file_",
-                        groupid = dir_name.to_str().unwrap(),
+                        "{group_id}_{s_name}_{s_id}_assignsubmission_file_",
+                        group_id = group_id,
                         s_name = studi.name,
-                        s_id = studi.internal_id.strip_prefix("Teilnehmer/in").unwrap(),
+                        s_id = studi.internal_id.strip_prefix("Teilnehmer/in").unwrap()
                     );
 
                     filtered
@@ -115,10 +144,72 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
                             // Repack each file
                             let fname =
                                 format!("{}/{}", dir_new_name, f.file_name().to_str().unwrap());
-                            zip_writer.start_file(fname, zip_options).unwrap();
+                            zip_writer.start_file(fname, *zip_options).unwrap();
                             let bytes = std::fs::read(f.path()).unwrap();
                             zip_writer.write_all(&bytes).unwrap();
                         });
+                });
+        });
+    csv_writer.flush()?;
+    zip_writer.flush()?;
+
+    Ok(())
+}
+
+pub fn repack_g2g(
+    unpacked_path: &PathBuf,
+    grading_table: &Vec<GradingRecord>,
+    grades: &Grades,
+    reg: &regex::Regex,
+    internal_reg: &regex::Regex,
+    zip_writer: &mut zip::ZipWriter<File>,
+    zip_options: &zip::write::FileOptions,
+    csv_writer: &mut csv::Writer<File>,
+) -> Result<(), Box<dyn Error>> {
+    // Start packing stuff
+    std::fs::read_dir(unpacked_path)?
+        .filter_map(|entry| entry.ok())
+        // Check that whatever we're packing is a _directory_
+        // and it matches the master regex
+        .filter(|entry| {
+            entry.path().is_dir() && reg.is_match(entry.file_name().to_str().unwrap_or(""))
+        })
+        .for_each(|filtered| {
+            debug!("filtered: {:?}", filtered.file_name());
+            let dir_name = filtered.file_name();
+            let group_name = dir_name.to_str().unwrap();
+            collect_students_for_group(grading_table, grades, group_name)
+                .iter()
+                .for_each(|studi| {
+                    // Write the student's record to the csv
+                    csv_writer.serialize(studi).unwrap();
+                });
+
+            let group_id = grades
+                .map
+                .iter()
+                .find(|m| m.target == group_name)
+                .map(|m| m.internal_id.clone().unwrap())
+                .unwrap();
+
+            // New directory name. Should be something like
+            // Übungsgruppe AB -- Abgabeteam XY_12345678_assignsubmission_file
+            let dir_new_name: String = format!("{group_name}_{group_id}_assignsubmission_file");
+
+            filtered
+                .path()
+                .read_dir()
+                .unwrap()
+                .filter_map(|f| f.ok())
+                // Match files against the second regex
+                .filter(|f| internal_reg.is_match(f.file_name().to_str().unwrap()))
+                .for_each(|f| {
+                    debug!("packing {:?}", f);
+                    // Repack each file
+                    let fname = format!("{}/{}", dir_new_name, f.file_name().to_str().unwrap());
+                    zip_writer.start_file(fname, *zip_options).unwrap();
+                    let bytes = std::fs::read(f.path()).unwrap();
+                    zip_writer.write_all(&bytes).unwrap();
                 });
         });
     csv_writer.flush()?;
