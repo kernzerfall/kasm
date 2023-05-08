@@ -79,6 +79,34 @@ cargo install --locked --path .
 | repack | Repacks the zip for upload to Moodle and constructs a grading worksheet using the slave config |
 | grade  | Assigns a grade to a group. It is also able to infer the group number if you're currently in its directory. |
 
+
+### Example
+```bash
+# cd to your master directory
+cd master
+
+# init kasm (just once for multiple sheets!)
+# let's say we have group 01
+kasm init -g 01
+
+# unpack sheet 01
+kasm unpack -s 01 -z /path/to/moodle.zip -c /path/to/moodle.csv
+
+# look at group 01's files
+cd 'unpack_01/Übungsgruppe 01 -- Abgabeteam 01'
+...
+
+# grade group 01 with 16,384 (while inside its folder)
+kasm grade 16,384
+
+# grade group 02 with 8,192 (while inside any folder inside the unpack_XX folder)
+kasm grade 8,192 02
+
+# go back to master folder and repack sheet 01
+cd ../../
+kasm repack 01
+```
+
 ## Plans
 
 ### Immediate Future
