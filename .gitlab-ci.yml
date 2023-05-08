@@ -12,7 +12,7 @@ build-linux64:
     name: kasm.linux64-${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
     expose_as: "kasm-linux64"
     paths:
-      - target/release/kasm
+      - target/x86_64-unknown-linux-gnu/release/kasm
 
 build-win64:
   stage: build
@@ -22,4 +22,4 @@ build-win64:
     name: kasm.win64-${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
     expose_as: "kasm-win64"
     paths:
-      - target/release/kasm.exe
+      - target/x86_64-pc-windows-gnu/release/kasm.exe
