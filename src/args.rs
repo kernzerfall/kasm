@@ -19,7 +19,7 @@ pub struct UnpackFiles {
 #[derive(Parser, Clone, Debug, Default)]
 pub struct RepackDir {
     /// Sheet ID
-    #[arg(short, long = "sheet", value_name = "sheet")]
+    #[arg(value_name = "sheet")]
     pub sheet_id: String,
 }
 
