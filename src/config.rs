@@ -5,6 +5,8 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
+use crate::gradingtable::GradingRecord;
+
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
 pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
 pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
@@ -67,6 +69,39 @@ pub struct Grades {
     /// Grade maps
     /// target (matrnr/group_id) -> grade
     pub map: Vec<Grade>,
+}
+
+impl Grades {
+    // Generates a vector of grading records from the filtered csv
+    // for the given group of students by overwriting grades using 
+    // the current object's grades
+    pub fn collect_students_for_group(
+        &self,
+        gt: &[GradingRecord],
+        group_id: &str,
+    ) -> Vec<GradingRecord> {
+        gt.to_owned()
+            .iter()
+            .filter(|&gr| gr.group == group_id)
+            .filter_map(|gr| {
+                let mut new_gr = gr.clone();
+                new_gr.grade = self.find_grade_for_target(group_id)?;
+                Some(new_gr)
+            })
+            .collect()
+    }
+
+    pub fn find_grade_for_target(&self, target: &str) -> Option<String> {
+        self 
+            .map
+            .iter()
+            .find(|&g| g.target == target)
+            .map_or(
+                None,
+                |g| Some(g.grade.clone()),
+            )
+    }
+
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

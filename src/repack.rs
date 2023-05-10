@@ -116,7 +116,7 @@ pub fn repack_g2i(
             debug!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_id = dir_name.to_str().unwrap();
-            collect_students_for_group(grading_table, grades, group_id)
+            grades.collect_students_for_group(grading_table, group_id)
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
@@ -178,7 +178,7 @@ pub fn repack_g2g(
             debug!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_name = dir_name.to_str().unwrap();
-            collect_students_for_group(grading_table, grades, group_name)
+            grades.collect_students_for_group(grading_table, group_name)
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
@@ -216,37 +216,4 @@ pub fn repack_g2g(
     zip_writer.flush()?;
 
     Ok(())
-}
-
-// Generates a vector of grading records from the filtered csv
-// for the given group of students by overwriting grades from
-//
-fn collect_students_for_group(
-    gt: &[GradingRecord],
-    grades: &Grades,
-    group_id: &str,
-) -> Vec<GradingRecord> {
-    gt.to_owned()
-        .iter()
-        .filter(|&gr| gr.group == group_id)
-        .map(|gr| {
-            let mut new_gr = gr.clone();
-            new_gr.grade = findgrade(grades, group_id);
-            new_gr
-        })
-        .collect()
-}
-
-fn findgrade(grades: &Grades, group_id: &str) -> String {
-    grades
-        .map
-        .iter()
-        .find(|&g| g.target == group_id)
-        .map_or_else(
-            || {
-                error!("could not resolve grade for group {}", group_id);
-                panic!();
-            },
-            |g| g.grade.clone(),
-        )
 }
