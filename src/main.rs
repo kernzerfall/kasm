@@ -1,21 +1,13 @@
-mod args;
-mod config;
-mod grade;
-mod gradingtable;
-mod init;
-mod repack;
-mod unpack;
-
 use clap::Parser;
-use config::Structure;
-use grade::grade;
-use repack::repack;
-use unpack::unpack;
+use kasm::config::Structure;
+use kasm::grade::grade;
+use kasm::repack::repack;
+use kasm::unpack::unpack;
 
-use args::Verb;
-use config::Grades;
-use config::MasterCfg;
-use config::UNPACK_GRADES_FILENAME;
+use kasm::args::Verb;
+use kasm::config::Grades;
+use kasm::config::MasterCfg;
+use kasm::config::UNPACK_GRADES_FILENAME;
 use log::error;
 
 const DEF_LOG_LEVEL: &str = "debug";
@@ -26,10 +18,10 @@ fn main() {
         std::env::set_var(ENV_LOG_LEVEL, DEF_LOG_LEVEL);
     }
     pretty_env_logger::init();
-    let command: args::Cli = args::Cli::parse();
+    let command = kasm::args::Cli::parse();
 
     if let Verb::Init(ref cfg) = command.verb {
-        init::init_master(cfg).unwrap();
+        kasm::init::init_master(cfg).unwrap();
         return;
     }
 
