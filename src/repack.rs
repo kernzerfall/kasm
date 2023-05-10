@@ -96,7 +96,7 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
 
 pub fn repack_g2i(
     unpacked_path: &PathBuf,
-    grading_table: &Vec<GradingRecord>,
+    grading_table: &[GradingRecord],
     grades: &Grades,
     reg: &regex::Regex,
     internal_reg: &regex::Regex,
@@ -159,7 +159,7 @@ pub fn repack_g2i(
 
 pub fn repack_g2g(
     unpacked_path: &PathBuf,
-    grading_table: &Vec<GradingRecord>,
+    grading_table: &[GradingRecord],
     grades: &Grades,
     reg: &regex::Regex,
     internal_reg: &regex::Regex,

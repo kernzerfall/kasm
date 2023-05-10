@@ -15,7 +15,7 @@ pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";
 
 /// Tells us whether the zip we're extracting contains groupped or individual
 /// submissions, as well as whether we want to repack it as one or the other.
-#[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq)]
+#[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Structure {
     #[default]
     Groups,
@@ -95,7 +95,7 @@ impl Grades {
         self.map
             .iter()
             .find(|&g| g.target == target)
-            .map_or(None, |g| Some(g.grade.clone()))
+            .map(|g| g.grade.clone())
     }
 }
 
