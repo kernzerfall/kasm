@@ -30,6 +30,14 @@ pub struct MasterCfg {
     #[clap(skip)]
     pub location: PathBuf,
 
+    #[serde(skip)]
+    #[clap(skip)]
+    pub moodle_token: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[arg(long = "course-id", value_name = "12345678")]
+    pub moodle_course_id: Option<String>,
+
     /// Regex with for (group, team)
     #[arg(short = 'r', long = "regex", value_name = "expr", default_value = DEFAULT_GROUPS_REGEX)]
     pub groups_regex: String,

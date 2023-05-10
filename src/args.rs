@@ -23,6 +23,13 @@ pub struct RepackDir {
     pub sheet_id: String,
 }
 
+#[derive(Parser, Clone, Debug, Default)]
+pub struct FetchCmd {
+    /// Sheet ID
+    #[arg(value_name = "sheet")]
+    pub sheet_id: Option<String>,
+}
+
 /// Grade Command struct. Identical to config::Grade, but
 /// kept separate due to semantical differences between
 /// the target variables.
@@ -56,6 +63,10 @@ pub enum Verb {
     Init(MasterCfg),
     /// Grade team
     Grade(GradeCmd),
+    /// Set up autofetch
+    SetupFetch,
+    /// Fetch assignment submissions
+    Fetch(FetchCmd),
 }
 
 #[derive(Parser, Clone, Debug)]
