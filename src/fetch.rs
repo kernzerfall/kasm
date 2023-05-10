@@ -99,7 +99,6 @@ impl MoodleFetcher {
             ])
             .send()?;
 
-        println!("URL={}", resp.url().to_string());
         let data: serde_json::Value = serde_json::de::from_str(&resp.text()?)?;
         Ok(data
             .get("courses")
