@@ -73,7 +73,7 @@ pub struct Grades {
 
 impl Grades {
     // Generates a vector of grading records from the filtered csv
-    // for the given group of students by overwriting grades using 
+    // for the given group of students by overwriting grades using
     // the current object's grades
     pub fn collect_students_for_group(
         &self,
@@ -92,16 +92,11 @@ impl Grades {
     }
 
     pub fn find_grade_for_target(&self, target: &str) -> Option<String> {
-        self 
-            .map
+        self.map
             .iter()
             .find(|&g| g.target == target)
-            .map_or(
-                None,
-                |g| Some(g.grade.clone()),
-            )
+            .map_or(None, |g| Some(g.grade.clone()))
     }
-
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]

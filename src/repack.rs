@@ -116,7 +116,8 @@ pub fn repack_g2i(
             debug!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_id = dir_name.to_str().unwrap();
-            grades.collect_students_for_group(grading_table, group_id)
+            grades
+                .collect_students_for_group(grading_table, group_id)
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
@@ -178,7 +179,8 @@ pub fn repack_g2g(
             debug!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_name = dir_name.to_str().unwrap();
-            grades.collect_students_for_group(grading_table, group_name)
+            grades
+                .collect_students_for_group(grading_table, group_name)
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
