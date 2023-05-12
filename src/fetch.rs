@@ -1,7 +1,8 @@
-use std::{collections::HashMap, error::Error, time::Duration};
+use serde_json::Value;
+use std::{collections::HashMap, error::Error, path::PathBuf, time::Duration};
 
-use crate::config::MasterCfg;
-use log::{error, info, warn};
+use crate::config::{MasterCfg, UNPACK_PATH_FILENAME_BASE};
+use log::{debug, error, info, warn};
 
 const KEYRING_SERVICE_NAME: &str = "kasm-moodle-token";
 static MOODLE_REST_URL: &str = "https://moodle.rwth-aachen.de/webservice/rest/server.php";
@@ -68,13 +69,22 @@ pub fn setup(master: &MasterCfg) -> core::result::Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[derive(Debug, Clone)]
+pub struct SubmissionFileMap {
+    pub dl_path: PathBuf,
+    pub dl_url: String,
+    pub group_id: String,
+    pub group_name: String,
+}
+
 pub struct MoodleFetcher {
     pub course_id: String,
+    pub config: MasterCfg,
     token: String,
 }
 
 impl MoodleFetcher {
-    pub fn new(course_id: String) -> MoodleFetcher {
+    pub fn new(config: &MasterCfg) -> MoodleFetcher {
         let entry =
             keyring::Entry::new(KEYRING_SERVICE_NAME, &whoami::username()).unwrap_or_else(|e| {
                 error!("{}", e);
@@ -83,7 +93,15 @@ impl MoodleFetcher {
             });
 
         MoodleFetcher {
-            course_id,
+            config: config.clone(),
+            course_id: config
+                .moodle_course_id
+                .as_ref()
+                .unwrap_or_else(|| {
+                    error!("run fetch-setup first!");
+                    panic!()
+                })
+                .clone(),
             token: entry.get_password().unwrap(),
         }
     }
@@ -112,14 +130,22 @@ impl MoodleFetcher {
             .iter()
             .map(|assignment| {
                 (
-                    assignment.get("name").unwrap().to_string(),
+                    assignment
+                        .get("name")
+                        .unwrap()
+                        .as_str()
+                        .unwrap()
+                        .to_string(),
                     assignment.get("id").unwrap().to_string(),
                 )
             })
             .collect::<HashMap<String, String>>())
     }
 
-    pub fn get_submissions_list(&self, assignment_id: &String) -> Result<(), Box<dyn Error>> {
+    pub fn get_submissions_list(
+        &self,
+        assignment_id: &String,
+    ) -> Result<HashMap<String, Vec<Value>>, Box<dyn Error>> {
         info!("getting submission list");
         warn!("this is going to take an eternity in big course pages");
         warn!("compare how slow moodle is when you click on 'view all submissions'");
@@ -130,20 +156,54 @@ impl MoodleFetcher {
                 ("moodlewsrestformat", "json"),
                 ("wsfunction", "mod_assign_get_submissions"),
                 ("wstoken", &self.token),
-                ("assignmentids[0]", &assignment_id),
+                ("assignmentids[0]", assignment_id),
             ])
             .timeout(Duration::new(900, 0)) // 15 Min Timeout because Moodle is _fast_
             .send()?;
 
-        let data: serde_json::Value = serde_json::from_str(&resp.text()?)?;
-        let submissions = data;
+        let rt = &resp.text()?;
+        //let rt = include_str!("../target/submissions.json");
+        let parsed: Value = serde_json::from_str(rt)?;
 
-        println!("{:#?}", submissions);
+        let gid_plug_arrs: HashMap<String, Vec<Value>> = parsed
+            .get("assignments")
+            .unwrap()
+            .get(0)
+            .unwrap()
+            .get("submissions")
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|submission| {
+                (submission.get("groupid")?, submission.get("plugins")?).into()
+            })
+            .map(|(a, b)| {
+                (
+                    a.to_string(),
+                    b.as_array()
+                        .unwrap()
+                        .iter()
+                        .filter_map(|plug| plug.get("fileareas")?.as_array())
+                        .flatten()
+                        .filter(|fa| fa.get("area").unwrap() == "submission_files")
+                        .filter_map(|fa| fa.get("files"))
+                        .filter_map(|ff| ff.as_array())
+                        .flatten()
+                        .cloned()
+                        .collect(),
+                )
+            })
+            .collect();
 
-        Ok(())
+        Ok(gid_plug_arrs)
     }
 
-    pub fn get_participants_info(&self, assignment_id: &String) {
+    pub fn get_group_mappings(
+        &self,
+        assignment_id: &String,
+    ) -> Result<HashMap<String, String>, Box<dyn Error>> {
+        info!("fetching participants list");
         let resp = reqwest::blocking::Client::new()
             .get(MOODLE_REST_URL)
             .query(&[
@@ -154,20 +214,110 @@ impl MoodleFetcher {
                 ("groupid", "0"),
                 ("onlyids", "1"),
                 ("filter", ""),
-            ]);
+            ])
+            .timeout(Duration::new(900, 0))
+            .send()?;
+        let rt = resp.text()?;
+
+        //let rt = include_str!("../target/participants.json");
+        let parsed: Value = serde_json::from_str(&rt)?;
+
+        let mut groups: HashMap<String, String> = HashMap::new();
+        parsed
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|part| {
+                (
+                    part.get("groupname")?,
+                    part.get("groupid")?,
+                    part.get("submissionstatus")?,
+                )
+                    .into()
+            })
+            .filter(|(_, _, status)| status.as_str().unwrap() == "submitted")
+            .for_each(|(gname, gid, _)| {
+                groups
+                    .entry(gid.to_string())
+                    .or_insert_with(|| gname.as_str().unwrap().into());
+            });
+
+        Ok(groups)
     }
 
     pub fn interactive_dl(&self) -> Result<(), Box<dyn Error>> {
         let assignments = self.fetch_directory()?;
-        let selected = inquire::Select::new(
-            "Select an assignment to download",
-            assignments.keys().collect(),
-        )
-        .prompt()?;
+        let mut prompt_revord: Vec<&String> = assignments.keys().collect();
+        prompt_revord.sort_unstable();
+        prompt_revord.reverse();
+        let selected =
+            inquire::Select::new("Select an assignment to download", prompt_revord).prompt()?;
 
+        let reg = regex::Regex::new(&self.config.groups_regex)?;
         let dl_id = assignments.get(selected).unwrap();
+        let participants = self.get_group_mappings(dl_id)?;
+        let submissions = self.get_submissions_list(dl_id)?;
 
-        self.get_submissions_list(dl_id)?;
+        let nr_regex = regex::Regex::new("([0-9]{2})")?;
+
+        let base_path = PathBuf::from(
+            UNPACK_PATH_FILENAME_BASE.to_string()
+                + nr_regex
+                    .captures(selected.as_str())
+                    .unwrap()
+                    .get(1)
+                    .unwrap()
+                    .into(),
+        );
+        info!("Sel {:?}", base_path);
+
+        let filtered_participants: HashMap<&String, &String> = participants
+            .iter()
+            .filter_map(|(k, v)| {
+                if reg.captures(v)?.get(1)?.as_str() == self.config.group {
+                    Some((k, v))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let filtered_files: Vec<SubmissionFileMap> = filtered_participants
+            .iter()
+            .filter(|(_, v)| reg.captures(v).unwrap().get(1).unwrap().as_str() == self.config.group)
+            .flat_map(|(gid, gname)| {
+                let group_path = base_path.join(gname);
+                submissions
+                    .get(gid.as_str())
+                    .unwrap()
+                    .iter()
+                    .filter_map(move |file| {
+                        SubmissionFileMap {
+                            dl_url: file.get("fileurl")?.as_str()?.to_string(),
+                            dl_path: group_path.join(file.get("filename")?.as_str()?),
+                            group_id: gid.to_string(),
+                            group_name: gname.to_string(),
+                        }
+                        .into()
+                    })
+            })
+            .collect();
+
+        info!("downloading {} file(s)", filtered_files.len());
+        for file in &filtered_files {
+            info!("downloading submission of {{{}}}", file.group_name);
+            std::fs::create_dir_all(file.dl_path.parent().unwrap())?;
+            let resp = reqwest::blocking::Client::new()
+                .get(&file.dl_url)
+                .query(&[("token", self.token.as_str())])
+                .timeout(Duration::new(900, 0))
+                .send()?;
+
+            std::fs::write(&file.dl_path, resp.bytes()?)?;
+        }
+
+        info!("done");
+        warn!("note: repacking autofetched files is not implemented yet!");
 
         Ok(())
     }

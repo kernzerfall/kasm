@@ -62,7 +62,7 @@ fn main() {
             kasm::fetch::setup(&master).unwrap();
         }
         Verb::Fetch(_cfg) => {
-            kasm::fetch::MoodleFetcher::new(master.moodle_course_id.unwrap())
+            kasm::fetch::MoodleFetcher::new(&master)
                 .interactive_dl()
                 .unwrap();
         }
