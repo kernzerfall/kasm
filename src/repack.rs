@@ -74,7 +74,10 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
         .compression_level(Some(9));
 
     // Create the csv writer
-    let mut csv_writer = csv::Writer::from_path(grading_csv_name)?;
+    let mut csv_writer = csv::WriterBuilder::new()
+        .delimiter(b',')
+        .quote_style(csv::QuoteStyle::Always)
+        .from_path(grading_csv_name)?;
 
     let repack_fn = match (&master.unpack_structure, &master.repack_structure) {
         (Structure::Groups, Structure::Groups) => repack_g2g,
