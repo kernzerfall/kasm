@@ -1,4 +1,4 @@
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use std::io::Write;
 use std::{
     error::Error,
@@ -7,7 +7,7 @@ use std::{
     time::{self, UNIX_EPOCH},
 };
 
-use crate::config::Structure;
+use crate::config::{Source, Structure};
 use crate::{
     args::RepackDir,
     config::{
@@ -45,16 +45,7 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
         return Err("".into());
     }
 
-    if !unpacked_path.join(UNPACK_CSV_FILENAME).is_file() {
-        error!(
-            "filtered csv file could not be found in {:?}",
-            unpacked_path
-        );
-        return Err("".into());
-    }
-
     // Parse stuff
-    let grading_table = GradingRecord::from_csv(&unpacked_path.join(UNPACK_CSV_FILENAME))?;
     let grades: Grades = toml::from_str(&std::fs::read_to_string(
         unpacked_path.join(UNPACK_GRADES_FILENAME),
     )?)?;
@@ -66,15 +57,29 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
         Some(ref filter) => filter,
     })?;
 
+    if !unpacked_path.join(UNPACK_CSV_FILENAME).is_file() && grades.source == Source::CsvAndZip {
+        error!(
+            "filtered csv file could not be found in {:?}",
+            unpacked_path
+        );
+        return Err("".into());
+    }
+
+    let grading_table =
+        GradingRecord::from_csv(&unpacked_path.join(UNPACK_CSV_FILENAME)).unwrap_or(Vec::new());
+
+    let csv_writer = if grades.source == Source::CsvAndZip {
+        Some(csv::Writer::from_path(grading_csv_name.clone())?)
+    } else {
+        None
+    };
+
     // Create the zip file, its writer and config
     let zip_file = File::create(zip_name)?;
     let mut zip_writer = zip::ZipWriter::new(zip_file);
     let zip_options = zip::write::FileOptions::default()
         .compression_method(zip::CompressionMethod::Deflated)
         .compression_level(Some(9));
-
-    // Create the csv writer
-    let mut csv_writer = csv::Writer::from_path(grading_csv_name)?;
 
     let repack_fn = match (&master.unpack_structure, &master.repack_structure) {
         (Structure::Groups, Structure::Groups) => repack_g2g,
@@ -90,8 +95,15 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
         &internal_reg,
         &mut zip_writer,
         &zip_options,
-        Some(&mut csv_writer),
-    )
+        csv_writer,
+    )?;
+
+    if grades.source == Source::Autofetch {
+        warn!("source is autofetch: no .csv was generated!");
+        info!("use `kasm push` inside the unpack directory to publish grades");
+    }
+
+    Ok(())
 }
 
 pub fn repack_g2i(
@@ -102,7 +114,7 @@ pub fn repack_g2i(
     internal_reg: &regex::Regex,
     zip_writer: &mut zip::ZipWriter<File>,
     zip_options: &zip::write::FileOptions,
-    mut csv_writer: Option<&mut csv::Writer<File>>,
+    mut csv_writer: Option<csv::Writer<File>>,
 ) -> Result<(), Box<dyn Error>> {
     // Start packing stuff
     std::fs::read_dir(unpacked_path)?
@@ -153,7 +165,7 @@ pub fn repack_g2i(
                         });
                 });
         });
-    if let Some(writer) = csv_writer {
+    if let Some(ref mut writer) = csv_writer {
         writer.flush()?;
     }
     zip_writer.flush()?;
@@ -169,7 +181,7 @@ pub fn repack_g2g(
     internal_reg: &regex::Regex,
     zip_writer: &mut zip::ZipWriter<File>,
     zip_options: &zip::write::FileOptions,
-    mut csv_writer: Option<&mut csv::Writer<File>>,
+    mut csv_writer: Option<csv::Writer<File>>,
 ) -> Result<(), Box<dyn Error>> {
     // Start packing stuff
     std::fs::read_dir(unpacked_path)?
@@ -220,7 +232,7 @@ pub fn repack_g2g(
                     zip_writer.write_all(&bytes).unwrap();
                 });
         });
-    if let Some(writer) = csv_writer {
+    if let Some(ref mut writer) = csv_writer {
         writer.flush()?;
     }
     zip_writer.flush()?;
