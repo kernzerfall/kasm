@@ -78,6 +78,10 @@ pub struct Grades {
     #[serde(skip)]
     pub location: PathBuf,
 
+    /// Moodle Assignment ID. Used in autofetch workflows to push grades.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assign_id: Option<String>,
+
     /// Indicates the source of the files.
     /// Currently it's impossible to mix and match autofetch
     /// and .zips .csvs.

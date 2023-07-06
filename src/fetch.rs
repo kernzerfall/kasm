@@ -302,6 +302,7 @@ impl MoodleFetcher {
             sheet_id: selected.split(" ").last().unwrap().to_string(),
             map: Default::default(),
             source: crate::config::Source::Autofetch,
+            assign_id: Some(dl_id.to_owned()),
         };
         self.gen_grading_files(&mut config, &filtered_participants, &participants.1)?;
 
@@ -376,6 +377,7 @@ impl MoodleFetcher {
                 map: grades_arr,
                 sheet_id: conf.sheet_id.to_owned(),
                 source: conf.source.to_owned(),
+                assign_id: conf.assign_id.to_owned(),
             })?,
         )?;
 
