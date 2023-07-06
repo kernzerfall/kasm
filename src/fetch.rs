@@ -1,13 +1,8 @@
 use serde_json::Value;
-use std::{
-    collections::HashMap,
-    error::Error,
-    path::{Path, PathBuf},
-    time::Duration,
-};
+use std::{collections::HashMap, error::Error, path::PathBuf, time::Duration};
 
 use crate::config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE};
-use log::{debug, error, info, warn};
+use log::{error, info, warn};
 
 const KEYRING_SERVICE_NAME: &str = "kasm-moodle-token";
 static MOODLE_REST_URL: &str = "https://moodle.rwth-aachen.de/webservice/rest/server.php";
@@ -246,7 +241,7 @@ impl MoodleFetcher {
             .for_each(|(userid, gname, gid, _)| {
                 group_members_mappings
                     .entry(gid.to_string())
-                    .or_insert_with(|| Vec::new())
+                    .or_insert_with(Vec::new)
                     .push(userid.to_string());
                 groups
                     .entry(gid.to_string())
@@ -295,11 +290,11 @@ impl MoodleFetcher {
             })
             .collect();
 
-        let sheet_id = selected.split(" ").last().unwrap().to_string();
+        let sheet_id = selected.split(' ').last().unwrap().to_string();
         let loc = format!("{}{}", UNPACK_PATH_FILENAME_BASE, sheet_id);
         let mut config = Grades {
             location: loc.into(),
-            sheet_id: selected.split(" ").last().unwrap().to_string(),
+            sheet_id: selected.split(' ').last().unwrap().to_string(),
             map: Default::default(),
             source: crate::config::Source::Autofetch,
             assign_id: Some(dl_id.to_owned()),
