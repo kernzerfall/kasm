@@ -156,6 +156,7 @@ All of these would be better off as script-hooks
 - [ ] Hardcode less stuff. Things like target directory names should be handled e.g. by Handlebars
     to make everything more easily modifiable for special cases (and if Moodle breaks *again*)
 - [x] ~~Automatically download submissions (Moodle API + Token + Page ID)~~ (Only G2G for now)
+- [x] ~~Automatically publish grades~~ (Only G2G for now)
 - [ ] Automatically upload feedback
 
 ## Limitations
