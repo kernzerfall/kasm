@@ -192,25 +192,36 @@ pub fn repack_g2g(
             entry.path().is_dir() && reg.is_match(entry.file_name().to_str().unwrap_or(""))
         })
         .for_each(|filtered| {
-            debug!("filtered: {:?}", filtered.file_name());
+            info!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_name = dir_name.to_str().unwrap();
-            grades
-                .collect_students_for_group(grading_table, group_name)
-                .iter()
-                .for_each(|studi| {
-                    // Write the student's record to the csv
-                    if let Some(ref mut writer) = csv_writer {
-                        writer.serialize(studi).unwrap();
-                    }
-                });
 
-            let group_id = grades
+            if let Some(ref mut writer) = csv_writer {
+                grades
+                    .collect_students_for_group(grading_table, group_name)
+                    .iter()
+                    .for_each(|studi| {
+                        // Write the student's record to the csv
+                        writer.serialize(studi).unwrap();
+                    });
+            }
+
+            let group_id = match grades
                 .map
                 .iter()
                 .find(|m| m.target == group_name)
-                .map(|m| m.internal_id.clone().unwrap())
-                .unwrap();
+                .map(|m| m.internal_id.clone())
+            {
+                Some(Some(internal_id)) => internal_id,
+                Some(None) => {
+                    error!("Group name ({group_name}) not found. Skipping.");
+                    return;
+                }
+                None => {
+                    error!("({group_name}) doens't have an internal ID. Can't repack. Skipping.");
+                    return;
+                }
+            };
 
             // New directory name. Should be something like
             // Übungsgruppe AB -- Abgabeteam XY_12345678_assignsubmission_file
