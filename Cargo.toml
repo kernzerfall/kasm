@@ -1,7 +1,7 @@
 [package]
 name = "kasm"
 description = "kasm (is) Another Submission Multitool"
-version = "0.2.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["kernzerfall <me@georgar.de>"]
 license = "EUPL-1.2-or-later"
