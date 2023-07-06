@@ -66,6 +66,11 @@ fn main() {
                 .interactive_dl()
                 .unwrap();
         }
+        Verb::Push(cfg) => {
+            kasm::fetch::MoodleFetcher::new(&master)
+                .push_grades(&grades.expect("grades.toml"), cfg.dry_run)
+                .unwrap();
+        }
         _ => panic!("unexpected verb"),
     }
 }

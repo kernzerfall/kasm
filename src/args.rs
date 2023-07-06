@@ -52,6 +52,13 @@ pub struct GradeCmd {
     pub target: Option<String>,
 }
 
+/// Push Command Struct. Basically tells us whether we're dry-running.
+#[derive(Parser, Clone, Debug, Default)]
+pub struct PushCmd {
+    #[arg(long = "dry-run", default_value_t = false)]
+    pub dry_run: bool,
+}
+
 /// First subcommand ("verb") found on the cmdline
 #[derive(Subcommand, Clone, Debug)]
 pub enum Verb {
@@ -67,6 +74,8 @@ pub enum Verb {
     SetupFetch,
     /// Fetch assignment submissions
     Fetch(FetchCmd),
+    /// Push grades to moodle
+    Push(PushCmd),
 }
 
 #[derive(Parser, Clone, Debug)]
