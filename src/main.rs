@@ -1,5 +1,6 @@
 use clap::Parser;
 use kasm::config::Structure;
+use kasm::config::UNPACK_PATH_FILENAME_BASE;
 use kasm::grade::grade;
 use kasm::repack::repack;
 use kasm::unpack::unpack;
@@ -8,7 +9,7 @@ use kasm::args::Verb;
 use kasm::config::Grades;
 use kasm::config::MasterCfg;
 use kasm::config::UNPACK_GRADES_FILENAME;
-use log::error;
+use log::{error, info};
 
 const DEF_LOG_LEVEL: &str = "info";
 const ENV_LOG_LEVEL: &str = "RUST_LOG";
@@ -67,9 +68,17 @@ fn main() {
                 .unwrap();
         }
         Verb::Push(cfg) => {
-            kasm::fetch::MoodleFetcher::new(&master)
-                .push_grades(&grades.expect("grades.toml"), cfg.dry_run)
-                .unwrap();
+            if let Ok(ref grades) = grades {
+                kasm::fetch::MoodleFetcher::new(&master)
+                    .push_grades(grades, cfg.dry_run)
+                    .unwrap();
+            } else {
+                error!("{} could not be found!", UNPACK_GRADES_FILENAME);
+                info!(
+                    "run this command from inside an {}xx directory",
+                    UNPACK_PATH_FILENAME_BASE
+                );
+            }
         }
         _ => panic!("unexpected verb"),
     }
