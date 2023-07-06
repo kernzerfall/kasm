@@ -90,7 +90,7 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
         &internal_reg,
         &mut zip_writer,
         &zip_options,
-        &mut csv_writer,
+        Some(&mut csv_writer),
     )
 }
 
@@ -102,7 +102,7 @@ pub fn repack_g2i(
     internal_reg: &regex::Regex,
     zip_writer: &mut zip::ZipWriter<File>,
     zip_options: &zip::write::FileOptions,
-    csv_writer: &mut csv::Writer<File>,
+    mut csv_writer: Option<&mut csv::Writer<File>>,
 ) -> Result<(), Box<dyn Error>> {
     // Start packing stuff
     std::fs::read_dir(unpacked_path)?
@@ -121,7 +121,9 @@ pub fn repack_g2i(
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
-                    csv_writer.serialize(studi).unwrap();
+                    if let Some(ref mut writer) = csv_writer {
+                        writer.serialize(studi).unwrap();
+                    }
 
                     // New directory name. Should be something like
                     // Übungsgruppe AB -- Abgabeteam XY_Name, \
@@ -151,7 +153,9 @@ pub fn repack_g2i(
                         });
                 });
         });
-    csv_writer.flush()?;
+    if let Some(writer) = csv_writer {
+        writer.flush()?;
+    }
     zip_writer.flush()?;
 
     Ok(())
@@ -165,7 +169,7 @@ pub fn repack_g2g(
     internal_reg: &regex::Regex,
     zip_writer: &mut zip::ZipWriter<File>,
     zip_options: &zip::write::FileOptions,
-    csv_writer: &mut csv::Writer<File>,
+    mut csv_writer: Option<&mut csv::Writer<File>>,
 ) -> Result<(), Box<dyn Error>> {
     // Start packing stuff
     std::fs::read_dir(unpacked_path)?
@@ -184,7 +188,9 @@ pub fn repack_g2g(
                 .iter()
                 .for_each(|studi| {
                     // Write the student's record to the csv
-                    csv_writer.serialize(studi).unwrap();
+                    if let Some(ref mut writer) = csv_writer {
+                        writer.serialize(studi).unwrap();
+                    }
                 });
 
             let group_id = grades
@@ -214,7 +220,9 @@ pub fn repack_g2g(
                     zip_writer.write_all(&bytes).unwrap();
                 });
         });
-    csv_writer.flush()?;
+    if let Some(writer) = csv_writer {
+        writer.flush()?;
+    }
     zip_writer.flush()?;
 
     Ok(())
