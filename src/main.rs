@@ -1,24 +1,17 @@
-mod args;
-mod config;
-mod grade;
-mod gradingtable;
-mod init;
-mod repack;
-mod unpack;
-
 use clap::Parser;
-use config::Structure;
-use grade::grade;
-use repack::repack;
-use unpack::unpack;
+use kasm::config::Structure;
+use kasm::config::UNPACK_PATH_FILENAME_BASE;
+use kasm::grade::grade;
+use kasm::repack::repack;
+use kasm::unpack::unpack;
 
-use args::Verb;
-use config::Grades;
-use config::MasterCfg;
-use config::UNPACK_GRADES_FILENAME;
-use log::error;
+use kasm::args::Verb;
+use kasm::config::Grades;
+use kasm::config::MasterCfg;
+use kasm::config::UNPACK_GRADES_FILENAME;
+use log::{error, info};
 
-const DEF_LOG_LEVEL: &str = "debug";
+const DEF_LOG_LEVEL: &str = "info";
 const ENV_LOG_LEVEL: &str = "RUST_LOG";
 
 fn main() {
@@ -26,10 +19,10 @@ fn main() {
         std::env::set_var(ENV_LOG_LEVEL, DEF_LOG_LEVEL);
     }
     pretty_env_logger::init();
-    let command: args::Cli = args::Cli::parse();
+    let command = kasm::args::Cli::parse();
 
     if let Verb::Init(ref cfg) = command.verb {
-        init::init_master(cfg).unwrap();
+        kasm::init::init_master(cfg).unwrap();
         return;
     }
 
@@ -65,6 +58,27 @@ fn main() {
         }
         Verb::Repack(cfg) => {
             repack(&master, &cfg).unwrap();
+        }
+        Verb::SetupFetch => {
+            kasm::fetch::setup(&master).unwrap();
+        }
+        Verb::Fetch(_cfg) => {
+            kasm::fetch::MoodleFetcher::new(&master)
+                .interactive_dl()
+                .unwrap();
+        }
+        Verb::Push(cfg) => {
+            if let Ok(ref grades) = grades {
+                kasm::fetch::MoodleFetcher::new(&master)
+                    .push_grades(grades, cfg.dry_run)
+                    .unwrap();
+            } else {
+                error!("{} could not be found!", UNPACK_GRADES_FILENAME);
+                info!(
+                    "run this command from inside an {}xx directory",
+                    UNPACK_PATH_FILENAME_BASE
+                );
+            }
         }
         _ => panic!("unexpected verb"),
     }

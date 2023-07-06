@@ -1,6 +1,6 @@
 # <div align=center>kasm</div>
 <div align=center>
-kasm (is) Another Submission Multitool (for Moodle). Pronounced <i>chasm</i>.
+kasm (is) Another Submission Multitool (for Moodle). Pronounced <i>chasm</i>. Made for terminal warriors.
 </div>
 
 <br>
@@ -30,57 +30,52 @@ cargo install --locked --path .
   - The regex to match groups against
   - The structure of the zip (are we expecting groupped folders in it?)
   - A filter (regex) to only repack certain files.
+
+You then have the choice between two workflows.
+
+**1. CSV & ZIP Workflow** 
 - In the master directory, you create a slave by `kasm unpack`. It contains
   - A slave config (`grades.toml`)
   - The submission folders
   - The filtered grading worksheet csv
 - To assign grades, use `kasm grade` or edit the `grades.toml` file.
   - `kasm grade` will infer the team automagically if you're inside
-    its subfolder
+     its subfolder
   - **IMPORTANT!** Always use the format Moodle expects (especially the decimal separator).
     `kasm` doesn't parse your inputs. They are taken at face-value as strings.
-- `kasm repack` (in the master directory) packs the feedback into a zip file
-    (`feedback_$SHEET_$TIMESTAMP.zip`) and grades into `grades_$SHEET_$TIMESTAMP.csv`.
-        Just upload these at the appropriate place in Moodle.
+  - `kasm repack` (in the master directory) packs the feedback into a zip file
+     (`feedback_$SHEET_$TIMESTAMP.zip`) and grades into `grades_$SHEET_$TIMESTAMP.csv`.
+      Just upload these at the appropriate place in Moodle.
 
-### What makes `kasm` different than the slew of other submission scripts?
-
-1. `kasm` is made for the terminal warrior. Other scripts have you
-    editing .csv files - which warrants a trip to `vim` (or
-    godforbid a GUI editor) - and renaming directories
-    to assign grades, which can mess up other open terminals inside
-    them.
-    - `kasm grade` takes care of all of that for you, so that you'll
-      never have to leave your terminal window (except to annotate the actual
-      PDFs I guess). It will work seamlessly whether you're in the `unpack`
-      directory or inside a team's submission folder.
-2. `kasm` works (probably™). Other scripts are currently broken on the newest
-    version of moodle.
-3. `kasm` is faster and more efficient.
-    - It only selectively unzips files (instead of unzipping everything and
-        `rm -rf`'ing what we don't need).
-    - It repacks files live - without creating an intermediary `tmp` directory,
-      no matter whether it filters files, adds extra directories, etc.
-    - It's compiled to native code, what else do I need to say?
-4. `kasm` is more convenient.
-    - Due to the usage of master/slave config files, you need to type less stuff to get the same thing done.
-    - If you set a filter in the master config, you don't even need to clean up junk files from the
-      directories before repacking them!
-5. `kasm` has [plans for the future](#plans).
+**2. Autofetch Workflow**
+- Run `kasm setup-fetch` once to
+    1. define a course ID (look at the URL in your browser)
+    2. save your Moodle Token to your OS's keyring (You can find the token under Moodle > Settings > Tokens > Moodle Mobile Mobile Service)
+- Fetch an assignment using `kasm fetch`
+    - `fetch` will display a list of assignments to select from.
+- Grade using `kasm grade`
+- Publish your grades automatically using `kasm push`
+- Repack your feedback zip using `kasm repack` (in the master directory)
+  - **Note**: `kasm repack` will **NOT** produce a .csv with Autofetch. You'll need to use `kasm push` to publish grades.
 
 ### Command line
 `kasm` currently has 5 subcommands
 
 |Subcommand | Arguments |
 |-|-|
-| help   | Get help for `kasm` or for any other subcommand |
-| init   | Creates a master config file in the current directory |
-| unpack | Extracts a moodle zip file, filters a moodle csv for the given group and initializes a slave config in the new directory |
-| repack | Repacks the zip for upload to Moodle and constructs a grading worksheet using the slave config |
-| grade  | Assigns a grade to a group. It is also able to infer the group number if you're currently in its directory. |
+| help        | Get help for `kasm` or for any other subcommand |
+| init        | Creates a master config file in the current directory |
+| unpack      | Extracts a moodle zip file, filters a moodle csv for the given group and initializes a slave config in the new directory |
+| repack      | Repacks the zip for upload to Moodle and constructs a grading worksheet using the slave config |
+| grade       | Assigns a grade to a group. It is also able to infer the group number if you're currently in its directory. |
+| setup-fetch | Saves the course ID to the master config and a Moodle API token to the user's keyring. |
+| fetch       | Fetches an assignment's submissions (no parameters/interactive) |
+| push        | Publishes grades (can **only** be used with fetch - not with unpack!!!) |
 
 
-### Example
+### Examples
+
+**Example 1**: Plain usage with CSV and ZIP
 ```bash
 # cd to your master directory
 cd master
@@ -107,12 +102,42 @@ cd ../../
 kasm repack 01
 ```
 
+**Example 2**: Autofetch workflow
+```bash
+# cd to your master directory
+cd master
+
+# setup the autofetch workflow (needs course ID and moodle token)
+kasm fetch-setup
+
+# fetch some assignment (interactive)
+kasm fetch
+
+# look at group 01's files
+cd 'unpack_01/Übungsgruppe 01 -- Abgabeteam 01'
+...
+
+# grade group 01 with 16,384 (while inside its folder)
+kasm grade 16,384
+
+# publish grades AUTOMAGICALLY
+kasm push
+
+# go back to master and repack (ONLY the ZIP file will get
+# repacked if you use autofetch)
+cd ../../
+kasm repack 01
+```
+
+
+
 ## Plans
 
 ### Immediate Future
-- [ ] Recursively extract zips
-- [ ] Prepend all extracted PDFs with e.g. a grading table
-- [ ] Generate said grading table dynamically (LaTeX/Handlebars)
+All of these would be better off as script-hooks
+- [ ] ~~Recursively extract zips~~ [CANCELED]
+- [ ] ~~Prepend all extracted PDFs with e.g. a grading table~~ [CANCELED]
+- [ ] ~~Generate said grading table dynamically (LaTeX/Handlebars)~~ [CANCELED]
 
 ### Soon™
 - [ ] Add script hooks
@@ -123,7 +148,8 @@ kasm repack 01
 ### Would be cool at some point I guess
 - [ ] Hardcode less stuff. Things like target directory names should be handled e.g. by Handlebars
     to make everything more easily modifiable for special cases (and if Moodle breaks *again*)
-- [ ] Automatically download submissions (Moodle API + Token + Page ID)
+- [x] ~~Automatically download submissions (Moodle API + Token + Page ID)~~ (Only G2G for now)
+- [x] ~~Automatically publish grades~~ (Only G2G for now)
 - [ ] Automatically upload feedback
 
 ## Limitations

@@ -5,6 +5,8 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
+use crate::gradingtable::GradingRecord;
+
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
 pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
 pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
@@ -13,7 +15,7 @@ pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";
 
 /// Tells us whether the zip we're extracting contains groupped or individual
 /// submissions, as well as whether we want to repack it as one or the other.
-#[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq)]
+#[derive(ValueEnum, Clone, Debug, Default, Display, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Structure {
     #[default]
     Groups,
@@ -27,6 +29,14 @@ pub struct MasterCfg {
     #[serde(skip)]
     #[clap(skip)]
     pub location: PathBuf,
+
+    #[serde(skip)]
+    #[clap(skip)]
+    pub moodle_token: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[arg(long = "course-id", value_name = "12345678")]
+    pub moodle_course_id: Option<String>,
 
     /// Regex with for (group, team)
     #[arg(short = 'r', long = "regex", value_name = "expr", default_value = DEFAULT_GROUPS_REGEX)]
@@ -51,6 +61,14 @@ pub struct MasterCfg {
     pub repack_structure: Structure,
 }
 
+/// Where the files came from
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
+pub enum Source {
+    #[default]
+    CsvAndZip,
+    Autofetch,
+}
+
 /// Nested grades.toml definition
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grades {
@@ -59,6 +77,15 @@ pub struct Grades {
     /// we want to overwrite it later.
     #[serde(skip)]
     pub location: PathBuf,
+
+    /// Moodle Assignment ID. Used in autofetch workflows to push grades.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assign_id: Option<String>,
+
+    /// Indicates the source of the files.
+    /// Currently it's impossible to mix and match autofetch
+    /// and .zips .csvs.
+    pub source: Source,
 
     /// Sheed Identificator
     /// e.g. 04
@@ -69,6 +96,34 @@ pub struct Grades {
     pub map: Vec<Grade>,
 }
 
+impl Grades {
+    // Generates a vector of grading records from the filtered csv
+    // for the given group of students by overwriting grades using
+    // the current object's grades
+    pub fn collect_students_for_group(
+        &self,
+        gt: &[GradingRecord],
+        group_id: &str,
+    ) -> Vec<GradingRecord> {
+        gt.to_owned()
+            .iter()
+            .filter(|&gr| gr.group == group_id)
+            .filter_map(|gr| {
+                let mut new_gr = gr.clone();
+                new_gr.grade = self.find_grade_for_target(group_id)?;
+                Some(new_gr)
+            })
+            .collect()
+    }
+
+    pub fn find_grade_for_target(&self, target: &str) -> Option<String> {
+        self.map
+            .iter()
+            .find(|&g| g.target == target)
+            .map(|g| g.grade.clone())
+    }
+}
+
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grade {
     /// Full team name/matrnr that the grade corresponds to
@@ -77,6 +132,10 @@ pub struct Grade {
     /// Internal Moodle ID
     #[serde(skip_serializing_if = "Option::is_none")]
     pub internal_id: Option<String>,
+
+    /// Member `userid`s to push grades to. Applies only to auto-workflow
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub members: Option<Vec<String>>,
 
     /// The grade to assign the group, should be formatted
     /// as Moodle wants it to be formatted
