@@ -69,7 +69,12 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
         GradingRecord::from_csv(&unpacked_path.join(UNPACK_CSV_FILENAME)).unwrap_or(Vec::new());
 
     let csv_writer = if grades.source == Source::CsvAndZip {
-        Some(csv::Writer::from_path(grading_csv_name.clone())?)
+        Some(
+            csv::WriterBuilder::new()
+                .delimiter(b',')
+                .quote_style(csv::QuoteStyle::Always)
+                .from_path(grading_csv_name.clone())?,
+        )
     } else {
         None
     };
