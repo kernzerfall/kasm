@@ -207,7 +207,7 @@ impl MoodleFetcher {
     pub fn get_group_mappings(
         &self,
         assignment_id: &String,
-    ) -> Result<HashMap<String, String>, Box<dyn Error>> {
+    ) -> Result<(HashMap<String, String>, HashMap<String, Vec<String>>), Box<dyn Error>> {
         info!("fetching participants list");
         let resp = reqwest::blocking::Client::new()
             .get(MOODLE_REST_URL)
@@ -226,6 +226,7 @@ impl MoodleFetcher {
 
         //let rt = include_str!("../target/participants.json");
         let parsed: Value = serde_json::from_str(&rt)?;
+        let mut group_members_mappings: HashMap<String, Vec<String>> = HashMap::new();
 
         let mut groups: HashMap<String, String> = HashMap::new();
         parsed
@@ -234,20 +235,26 @@ impl MoodleFetcher {
             .iter()
             .filter_map(|part| {
                 (
+                    part.get("id")?,
                     part.get("groupname")?,
                     part.get("groupid")?,
                     part.get("submissionstatus")?,
                 )
                     .into()
             })
-            .filter(|(_, _, status)| status.as_str().unwrap() == "submitted")
-            .for_each(|(gname, gid, _)| {
+            .filter(|(_, _, _, status)| status.as_str().unwrap() == "submitted")
+            .for_each(|(userid, gname, gid, _)| {
+                group_members_mappings
+                    .entry(gid.to_string())
+                    .or_insert_with(|| Vec::new())
+                    .push(userid.to_string());
                 groups
                     .entry(gid.to_string())
                     .or_insert_with(|| gname.as_str().unwrap().into());
             });
 
-        Ok(groups)
+        println!("{:#?}", group_members_mappings);
+        Ok((groups, group_members_mappings))
     }
 
     pub fn interactive_dl(&self) -> Result<(), Box<dyn Error>> {
@@ -277,6 +284,7 @@ impl MoodleFetcher {
         info!("Sel {:?}", base_path);
 
         let filtered_participants: HashMap<&String, &String> = participants
+            .0
             .iter()
             .filter_map(|(k, v)| {
                 if reg.captures(v)?.get(1)?.as_str() == self.config.group {
