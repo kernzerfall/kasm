@@ -62,7 +62,7 @@ pub struct MasterCfg {
 }
 
 /// Where the files came from
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Source {
     #[default]
     CsvAndZip,
