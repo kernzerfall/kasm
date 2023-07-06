@@ -155,7 +155,7 @@ pub fn repack_g2i(
                         // Match files against the second regex
                         .filter(|f| internal_reg.is_match(f.file_name().to_str().unwrap()))
                         .for_each(|f| {
-                            debug!("packing {:?}", f);
+                            info!("packing {:?}", f);
                             // Repack each file
                             let fname =
                                 format!("{}/{}", dir_new_name, f.file_name().to_str().unwrap());
@@ -235,7 +235,7 @@ pub fn repack_g2g(
                 // Match files against the second regex
                 .filter(|f| internal_reg.is_match(f.file_name().to_str().unwrap()))
                 .for_each(|f| {
-                    debug!("packing {:?}", f);
+                    info!("packing {:?}", f);
                     // Repack each file
                     let fname = format!("{}/{}", dir_new_name, f.file_name().to_str().unwrap());
                     zip_writer.start_file(fname, *zip_options).unwrap();
