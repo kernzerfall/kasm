@@ -116,6 +116,11 @@ pub fn repack_g2i(
     zip_options: &zip::write::FileOptions,
     mut csv_writer: Option<csv::Writer<File>>,
 ) -> Result<(), Box<dyn Error>> {
+    if csv_writer.is_none() || grades.source == Source::Autofetch {
+        error!("Group2Individual Repacking is not supported for Autofetch workflows (yet)");
+        return Err("".into());
+    }
+
     // Start packing stuff
     std::fs::read_dir(unpacked_path)?
         .filter_map(|entry| entry.ok())
