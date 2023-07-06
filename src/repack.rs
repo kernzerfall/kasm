@@ -1,4 +1,4 @@
-use log::{debug, error, info, warn};
+use log::{error, info, warn};
 use std::io::Write;
 use std::{
     error::Error,
@@ -73,7 +73,7 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
             csv::WriterBuilder::new()
                 .delimiter(b',')
                 .quote_style(csv::QuoteStyle::Always)
-                .from_path(grading_csv_name.clone())?,
+                .from_path(grading_csv_name)?,
         )
     } else {
         None
