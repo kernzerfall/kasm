@@ -1,7 +1,12 @@
 use serde_json::Value;
-use std::{collections::HashMap, error::Error, path::PathBuf, time::Duration};
+use std::{
+    collections::HashMap,
+    error::Error,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
-use crate::config::{MasterCfg, UNPACK_PATH_FILENAME_BASE};
+use crate::config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE};
 use log::{debug, error, info, warn};
 
 const KEYRING_SERVICE_NAME: &str = "kasm-moodle-token";
@@ -318,6 +323,43 @@ impl MoodleFetcher {
 
         info!("done");
         warn!("note: repacking autofetched files is not implemented yet!");
+
+        Ok(())
+    }
+    fn gen_grading_files(
+        &self,
+        conf: &mut Grades,
+        groups: &HashMap<&String, &String>,
+        group_user_mappings: &HashMap<String, Vec<String>>,
+    ) -> Result<(), Box<dyn Error>> {
+        let mut grades_arr: Vec<Grade> = Vec::new();
+        let mut seen: Vec<String> = Vec::new();
+
+        groups.iter().for_each(|(&gid, &gname)| {
+            grades_arr.push(Grade {
+                grade: "0".to_string(),
+                internal_id: Some(gid.to_owned()),
+                members: group_user_mappings.get(gid).cloned(),
+                target: gname.to_owned(),
+            });
+            seen.push(gid.to_owned());
+        });
+
+        info!("saw {} discreet groups", seen.len());
+
+        let grades_toml_path = conf.location.join(UNPACK_GRADES_FILENAME);
+
+        info!("writing {:#?}", grades_toml_path);
+        std::fs::create_dir_all(&conf.location)?;
+        std::fs::write(
+            grades_toml_path.clone(),
+            toml::to_string_pretty(&Grades {
+                location: grades_toml_path,
+                map: grades_arr,
+                sheet_id: conf.sheet_id.to_owned(),
+                source: conf.source.to_owned(),
+            })?,
+        )?;
 
         Ok(())
     }
