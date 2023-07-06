@@ -1,4 +1,4 @@
-use log::{debug, error};
+use log::{debug, error, info};
 use std::io::Write;
 use std::{
     error::Error,
@@ -113,7 +113,7 @@ pub fn repack_g2i(
             entry.path().is_dir() && reg.is_match(entry.file_name().to_str().unwrap_or(""))
         })
         .for_each(|filtered| {
-            debug!("filtered: {:?}", filtered.file_name());
+            info!("filtered: {:?}", filtered.file_name());
             let dir_name = filtered.file_name();
             let group_id = dir_name.to_str().unwrap();
             grades
