@@ -73,11 +73,14 @@ cargo install --locked --path .
 
 |Subcommand | Arguments |
 |-|-|
-| help   | Get help for `kasm` or for any other subcommand |
-| init   | Creates a master config file in the current directory |
-| unpack | Extracts a moodle zip file, filters a moodle csv for the given group and initializes a slave config in the new directory |
-| repack | Repacks the zip for upload to Moodle and constructs a grading worksheet using the slave config |
-| grade  | Assigns a grade to a group. It is also able to infer the group number if you're currently in its directory. |
+| help        | Get help for `kasm` or for any other subcommand |
+| init        | Creates a master config file in the current directory |
+| unpack      | Extracts a moodle zip file, filters a moodle csv for the given group and initializes a slave config in the new directory |
+| repack      | Repacks the zip for upload to Moodle and constructs a grading worksheet using the slave config |
+| grade       | Assigns a grade to a group. It is also able to infer the group number if you're currently in its directory. |
+| fetch-setup | Saves the course ID to the master config and a Moodle API token to the user's keyring. |
+| fetch       | Fetches an assignment's submissions (no parameters/interactive) |
+| push        | Publishes grades (can **only** be used with fetch - not with unpack!!!) |
 
 
 ### Examples
