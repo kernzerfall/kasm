@@ -10,7 +10,7 @@ use kasm::config::MasterCfg;
 use kasm::config::UNPACK_GRADES_FILENAME;
 use log::error;
 
-const DEF_LOG_LEVEL: &str = "warn";
+const DEF_LOG_LEVEL: &str = "info";
 const ENV_LOG_LEVEL: &str = "RUST_LOG";
 
 fn main() {
