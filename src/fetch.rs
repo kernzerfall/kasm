@@ -252,7 +252,7 @@ impl MoodleFetcher {
         Ok((groups, group_members_mappings))
     }
 
-    pub fn interactive_dl(&self) -> Result<(), Box<dyn Error>> {
+    pub fn interactive_dl(&mut self) -> Result<(), Box<dyn Error>> {
         let assignments = self.fetch_directory()?;
         let mut prompt_revord: Vec<&String> = assignments.keys().collect();
         prompt_revord.sort_unstable();
@@ -262,6 +262,7 @@ impl MoodleFetcher {
 
         let reg = regex::Regex::new(&self.config.groups_regex)?;
         let dl_id = assignments.get(selected).unwrap();
+
         let participants = self.get_group_mappings(dl_id)?;
         let submissions = self.get_submissions_list(dl_id)?;
 
@@ -375,6 +376,90 @@ impl MoodleFetcher {
                 assign_id: conf.assign_id.to_owned(),
             })?,
         )?;
+
+        Ok(())
+    }
+
+    fn set_grade_for(
+        &self,
+        assignid: String,
+        userid: String,
+        grade: String,
+        dry_run: bool,
+    ) -> Result<(), Box<dyn Error>> {
+        if dry_run {
+            let userdata_req = reqwest::blocking::Client::new()
+                .get(MOODLE_REST_URL)
+                .query(&[
+                    ("moodlewsrestformat", "json"),
+                    ("wsfunction", "mod_assign_get_participant"),
+                    ("wstoken", self.token.as_str()),
+                    ("assignid", assignid.as_str()),
+                    ("userid", userid.as_str()),
+                ])
+                .timeout(Duration::new(900, 0))
+                .send()?;
+
+            let userdata: serde_json::Value = serde_json::from_reader(userdata_req)?;
+            let uname = userdata.get("fullname").unwrap().as_str().unwrap();
+            let gname = userdata.get("groupname").unwrap().as_str().unwrap();
+
+            info!("dry-run: would set {grade} for ({uname}) AND Group ({gname})");
+            return Ok(());
+        }
+
+        let adj_grade = grade.replace(',', ".");
+
+        info!("Grading {userid} with {grade}");
+        let req = reqwest::blocking::Client::new()
+            .get(MOODLE_REST_URL)
+            .query(&[
+                ("moodlewsrestformat", "json"),
+                ("wsfunction", "mod_assign_save_grade"),
+                ("wstoken", self.token.as_str()),
+                // Moodle IDs
+                ("assignmentid", assignid.as_str()),
+                ("userid", userid.as_str()),
+                // Grade latest attempt
+                ("attemptnumber", "-1"),
+                // Set to graded
+                ("workflowstate", "graded"),
+                // Do not allow another attempt
+                ("addattempt", "0"),
+                // The grade itself
+                ("grade", adj_grade.as_str()),
+                // Apply to whole group
+                ("applytoall", "1"),
+                // Text Feedback (not implemented yet but Moodle needs it to be
+                // here)
+                ("plugindata[assignfeedbackcomments_editor][text]", ""),
+                ("plugindata[assignfeedbackcomments_editor][format]", "4"),
+            ])
+            .timeout(Duration::new(900, 0))
+            .send()?;
+
+        log::debug!("{:#?}", req.url());
+        log::debug!("{}", req.text()?);
+
+        Ok(())
+    }
+
+    pub fn push_grades(&mut self, grades: &Grades, dry_run: bool) -> Result<(), Box<dyn Error>> {
+        let assign_id = grades
+            .assign_id
+            .clone()
+            .expect("Moodle Assignment ID in grades.toml");
+
+        grades.map.iter().for_each(|record| {
+            let members = record.members.clone().unwrap();
+            self.set_grade_for(
+                assign_id.to_owned(),
+                members.get(0).unwrap().to_owned(),
+                record.grade.to_owned(),
+                dry_run,
+            )
+            .expect("success setting grade");
+        });
 
         Ok(())
     }
