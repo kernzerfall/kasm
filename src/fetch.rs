@@ -88,7 +88,7 @@ impl MoodleFetcher {
         let entry =
             keyring::Entry::new(KEYRING_SERVICE_NAME, &whoami::username()).unwrap_or_else(|e| {
                 error!("{}", e);
-                error!("run fetch-setup first!");
+                error!("run setup-fetch first!");
                 panic!();
             });
 
