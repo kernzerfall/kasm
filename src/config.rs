@@ -61,6 +61,14 @@ pub struct MasterCfg {
     pub repack_structure: Structure,
 }
 
+/// Where the files came from
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub enum Source {
+    #[default]
+    CsvAndZip,
+    Autofetch,
+}
+
 /// Nested grades.toml definition
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Grades {
@@ -69,6 +77,11 @@ pub struct Grades {
     /// we want to overwrite it later.
     #[serde(skip)]
     pub location: PathBuf,
+
+    /// Indicates the source of the files.
+    /// Currently it's impossible to mix and match autofetch
+    /// and .zips .csvs.
+    pub source: Source,
 
     /// Sheed Identificator
     /// e.g. 04

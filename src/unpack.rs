@@ -113,6 +113,7 @@ fn gen_grading_files(
             location: grades_toml_path,
             map: grades_arr,
             sheet_id: cfg.sheet_id.to_owned(),
+            source: crate::config::Source::CsvAndZip,
         })?,
     )?;
 
