@@ -295,6 +295,16 @@ impl MoodleFetcher {
             })
             .collect();
 
+        let sheet_id = selected.split(" ").last().unwrap().to_string();
+        let loc = format!("{}{}", UNPACK_PATH_FILENAME_BASE, sheet_id);
+        let mut config = Grades {
+            location: loc.into(),
+            sheet_id: selected.split(" ").last().unwrap().to_string(),
+            map: Default::default(),
+            source: crate::config::Source::Autofetch,
+        };
+        self.gen_grading_files(&mut config, &filtered_participants, &participants.1)?;
+
         let filtered_files: Vec<SubmissionFileMap> = filtered_participants
             .iter()
             .filter(|(_, v)| reg.captures(v).unwrap().get(1).unwrap().as_str() == self.config.group)
