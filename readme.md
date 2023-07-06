@@ -80,7 +80,9 @@ cargo install --locked --path .
 | grade  | Assigns a grade to a group. It is also able to infer the group number if you're currently in its directory. |
 
 
-### Example
+### Examples
+
+**Example 1**: Plain usage with CSV and ZIP
 ```bash
 # cd to your master directory
 cd master
@@ -107,12 +109,42 @@ cd ../../
 kasm repack 01
 ```
 
+**Example 2**: Autofetch workflow
+```bash
+# cd to your master directory
+cd master
+
+# setup the autofetch workflow (needs course ID and moodle token)
+kasm fetch-setup
+
+# fetch some assignment (interactive)
+kasm fetch
+
+# look at group 01's files
+cd 'unpack_01/Übungsgruppe 01 -- Abgabeteam 01'
+...
+
+# grade group 01 with 16,384 (while inside its folder)
+kasm grade 16,384
+
+# publish grades AUTOMAGICALLY
+kasm push
+
+# go back to master and repack (ONLY the ZIP file will get
+# repacked if you use autofetch)
+cd ../../
+kasm repack 01
+```
+
+
+
 ## Plans
 
 ### Immediate Future
-- [ ] Recursively extract zips
-- [ ] Prepend all extracted PDFs with e.g. a grading table
-- [ ] Generate said grading table dynamically (LaTeX/Handlebars)
+All of these would be better off as script-hooks
+- [ ] ~~Recursively extract zips~~ [CANCELED]
+- [ ] ~~Prepend all extracted PDFs with e.g. a grading table~~ [CANCELED]
+- [ ] ~~Generate said grading table dynamically (LaTeX/Handlebars)~~ [CANCELED]
 
 ### Soon™
 - [ ] Add script hooks
@@ -123,7 +155,7 @@ kasm repack 01
 ### Would be cool at some point I guess
 - [ ] Hardcode less stuff. Things like target directory names should be handled e.g. by Handlebars
     to make everything more easily modifiable for special cases (and if Moodle breaks *again*)
-- [ ] Automatically download submissions (Moodle API + Token + Page ID)
+- [x] ~~Automatically download submissions (Moodle API + Token + Page ID)~~ (Only G2G for now)
 - [ ] Automatically upload feedback
 
 ## Limitations
