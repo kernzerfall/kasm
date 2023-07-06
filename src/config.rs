@@ -116,6 +116,10 @@ pub struct Grade {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub internal_id: Option<String>,
 
+    /// Member `userid`s to push grades to. Applies only to auto-workflow
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub members: Option<Vec<String>>,
+
     /// The grade to assign the group, should be formatted
     /// as Moodle wants it to be formatted
     /// e.g. 10,5 or 10,0

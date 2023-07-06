@@ -85,6 +85,7 @@ fn gen_grading_files(
             if master.unpack_structure == Structure::Groups {
                 grades_arr.push(Grade {
                     target: r.group.to_owned(),
+                    members: None,
                     internal_id: gids.get(&r.group).cloned(),
                     grade: r.grade.to_owned(),
                 })
@@ -94,6 +95,7 @@ fn gen_grading_files(
         if master.unpack_structure == Structure::Individuals {
             grades_arr.push(Grade {
                 target: r.uni_id.to_owned(),
+                members: None,
                 internal_id: r.internal_id.to_owned().into(),
                 grade: r.best_grade.to_owned(),
             });
