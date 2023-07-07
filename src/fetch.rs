@@ -248,7 +248,6 @@ impl MoodleFetcher {
                     .or_insert_with(|| gname.as_str().unwrap().into());
             });
 
-        println!("{:#?}", group_members_mappings);
         Ok((groups, group_members_mappings))
     }
 
