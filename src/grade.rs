@@ -38,7 +38,7 @@ pub fn grade(master: &MasterCfg, cfg: &GradeCmd, grades: &Grades) -> Result<(), 
                 caps.get(2).map_or(false, |cap| cap.as_str() == target)
             })
         })
-        .map(|mut gd| {
+        .map(|gd| {
             info!("found match");
             changed = true;
             gd.grade = cfg.grade.to_owned();
