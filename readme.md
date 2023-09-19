@@ -8,6 +8,9 @@ kasm (is) Another Submission Multitool (for Moodle). Pronounced <i>chasm</i>. Ma
 <img src="https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white" />
 </div>
 
+<video src="https://s.georgar.de/kasm/03-autofetch-publish.webm" width=180> </video>
+
+
 ## Installation
 Just grab a release for your OS and put it in a path covered by `$PATH` (or equiv.)
 e.g. via
@@ -18,11 +21,18 @@ sudo install -Dm 0755 kasm /usr/local/bin/kasm
 
 Alternatively, grab the source and build/install it with cargo:
 ```bash
-cargo build -r
 cargo install --locked --path .
 ```
 
+
 ## Usage
+
+### Video Examples
+
+- [Setting up (autofetch)](https://s.georgar.de/kasm/00-autofetch-setup.webm)
+- [Fetching assignments](https://s.georgar.de/kasm/01-autofetch-downloading-sheets.webm)
+- [Grading](https://s.georgar.de/kasm/02-autofetch-grade.webm)
+- [Publishing feedback and grades](https://s.georgar.de/kasm/03-autofetch-publish.webm)
 
 ### Brief overview
 - The initialization procedure creates a reusable master config, which contains info such as
@@ -59,9 +69,9 @@ You then have the choice between two workflows.
   - **Note**: `kasm repack` will **NOT** produce a .csv with Autofetch. You'll need to use `kasm push` to publish grades.
 
 ### Command line
-`kasm` currently has 5 subcommands
+`kasm` currently has 8 subcommands
 
-|Subcommand | Arguments |
+|Subcommand | Explanation |
 |-|-|
 | help        | Get help for `kasm` or for any other subcommand |
 | init        | Creates a master config file in the current directory |
@@ -128,7 +138,6 @@ kasm push
 cd ../../
 kasm repack 01
 ```
-
 
 
 ## Plans
