@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    args::{FetchCmd},
+    args::FetchCmd,
     config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE},
     gradingtable::GradingRecord,
 };
@@ -357,8 +357,6 @@ impl MoodleFetcher {
         }
 
         info!("done");
-        warn!("note: repacking autofetched files is not implemented yet!");
-
         Ok(())
     }
     fn gen_grading_files(
