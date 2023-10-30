@@ -44,7 +44,7 @@ pub struct MasterCfg {
 
     // Your exercise group number as shown in Moodle
     #[arg(short = 'g', long = "group", value_name = "group id")]
-    pub group: String,
+    pub group: Option<String>,
 
     /// Unzip nested zip files
     #[arg(long, default_value_t = false)]

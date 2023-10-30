@@ -36,21 +36,21 @@ pub fn unpack(master: &MasterCfg, cfg: &UnpackFiles) -> Result<(), Box<dyn Error
         .filter(|&r| {
             reg.captures(&r.group).map_or(false, |caps| {
                 caps.get(1)
-                    .map_or(false, |val| val.as_str() == master.group)
+                    .map_or(false, |val| Some(val.as_str()) == master.group.as_deref())
             })
         })
         .collect::<Vec<_>>();
 
     if filtered.is_empty() {
         error!(
-            "could not find any records matching master.group = {}",
+            "could not find any records matching master.group = {:?}",
             master.group
         );
         return Err("".into());
     }
 
     info!(
-        "found {} records matching master.group = {}",
+        "found {} records matching master.group = {:?}",
         filtered.len(),
         master.group
     );
@@ -139,7 +139,7 @@ fn unzip_filter_main(
 
         if reg.captures(curr_name).map_or(false, |caps| {
             caps.get(1)
-                .map_or(false, |cap| cap.as_str() == master.group)
+                .map_or(false, |cap| Some(cap.as_str()) == master.group.as_deref())
         }) {
             let enclosed_path = curr.enclosed_name().unwrap();
             let mut parts = enclosed_path
