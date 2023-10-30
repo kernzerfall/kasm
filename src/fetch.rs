@@ -1,7 +1,7 @@
 use serde_json::Value;
-use std::{collections::HashMap, error::Error, path::PathBuf, time::Duration};
+use std::{collections::{HashMap, HashSet}, error::Error, path::PathBuf, time::Duration};
 
-use crate::config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE};
+use crate::{config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE}, gradingtable::GradingRecord, args::{Cli, FetchCmd}};
 use log::{error, info, warn};
 
 const KEYRING_SERVICE_NAME: &str = "kasm-moodle-token";
@@ -248,7 +248,20 @@ impl MoodleFetcher {
         Ok((groups, group_members_mappings))
     }
 
-    pub fn interactive_dl(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn filter_csv_groups(cfg: &FetchCmd) -> Result<HashSet::<String>, Box<dyn Error>> {
+        let grading_table = GradingRecord::from_csv(&cfg.csv)?;
+        let mut csv_groups = HashSet::<String>::new();
+        for idx in cfg.from_line..=cfg.to_line {
+            let record = grading_table
+                .get(idx as usize)
+                .expect("line_from..=line_to should be included in the table");
+            csv_groups.insert(record.group.to_owned());
+        }
+
+        Ok(csv_groups)
+    }
+
+    pub fn interactive_dl(&mut self, cfg: FetchCmd) -> Result<(), Box<dyn Error>> {
         let assignments = self.fetch_directory()?;
         let mut prompt_revord: Vec<&String> = assignments.keys().collect();
         prompt_revord.sort_unstable();
@@ -256,7 +269,6 @@ impl MoodleFetcher {
         let selected =
             inquire::Select::new("Select an assignment to download", prompt_revord).prompt()?;
 
-        let reg = regex::Regex::new(&self.config.groups_regex)?;
         let dl_id = assignments.get(selected).unwrap();
 
         let participants = self.get_group_mappings(dl_id)?;
@@ -275,11 +287,12 @@ impl MoodleFetcher {
         );
         info!("Sel {:?}", base_path);
 
+        let group_set = Self::filter_csv_groups(&cfg)?;
         let filtered_participants: HashMap<&String, &String> = participants
             .0
             .iter()
             .filter_map(|(k, v)| {
-                if reg.captures(v)?.get(1)?.as_str() == self.config.group {
+                if group_set.contains(v) {
                     Some((k, v))
                 } else {
                     None
@@ -298,26 +311,29 @@ impl MoodleFetcher {
         };
         self.gen_grading_files(&mut config, &filtered_participants, &participants.1)?;
 
+
         let filtered_files: Vec<SubmissionFileMap> = filtered_participants
             .iter()
-            .filter(|(_, v)| reg.captures(v).unwrap().get(1).unwrap().as_str() == self.config.group)
-            .flat_map(|(gid, gname)| {
+            .filter(|(_, v)| group_set.contains(v.as_str()))
+            .filter_map(|(gid, gname)| { 
                 let group_path = base_path.join(gname);
-                submissions
-                    .get(gid.as_str())
-                    .unwrap()
-                    .iter()
-                    .filter_map(move |file| {
-                        SubmissionFileMap {
-                            dl_url: file.get("fileurl")?.as_str()?.to_string(),
-                            dl_path: group_path.join(file.get("filename")?.as_str()?),
-                            group_id: gid.to_string(),
-                            group_name: gname.to_string(),
-                        }
-                        .into()
-                    })
+                Some(
+                    submissions
+                        .get(gid.as_str())?
+                        .iter()
+                        .filter_map(move |file| {
+                            SubmissionFileMap {
+                                dl_url: file.get("fileurl")?.as_str()?.to_string(),
+                                dl_path: group_path.join(file.get("filename")?.as_str()?),
+                                group_id: gid.to_string(),
+                                group_name: gname.to_string(),
+                            }
+                            .into()
+                        })
+                )
             })
-            .collect();
+            .flatten()
+            .collect(); 
 
         info!("downloading {} file(s)", filtered_files.len());
         for file in &filtered_files {
