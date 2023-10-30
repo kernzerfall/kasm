@@ -11,10 +11,13 @@ pub fn grade(master: &MasterCfg, cfg: &GradeCmd, grades: &Grades) -> Result<(), 
         Some(str) => str.clone(),
         None => {
             let cd = std::env::current_dir()?;
-            let infer = cd.components().find_map(|c| {
-                reg.captures(c.as_os_str().to_str().unwrap())
-                    .and_then(|caps| caps.get(2).map(|c| c.as_str()))
-            });
+            let infer = cd
+                .components()
+                .rev()
+                .find_map(|c| {
+                    reg.captures(c.as_os_str().to_str().unwrap())
+                        .and_then(|caps| caps.get(1).map(|c| c.as_str()))
+                });
 
             if let Some(infer) = infer {
                 info!("inferred group {} based on path", infer);
