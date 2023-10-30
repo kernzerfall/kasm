@@ -28,6 +28,18 @@ pub struct FetchCmd {
     /// Sheet ID
     #[arg(value_name = "sheet")]
     pub sheet_id: Option<String>,
+
+    /// Path to the Moodle CSV
+    #[arg(long, value_name = "/path/to/csv")]
+    pub csv: PathBuf,
+
+    /// Start of the line range in the CSV
+    #[arg(long, value_name = "line_number")]
+    pub from_line: u64,
+
+    /// End (inclusive!) of the line range in the CSV
+    #[arg(long, value_name = "line_number")]
+    pub to_line: u64,
 }
 
 /// Grade Command struct. Identical to config::Grade, but
