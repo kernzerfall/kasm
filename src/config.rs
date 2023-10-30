@@ -8,7 +8,7 @@ use strum::Display;
 use crate::gradingtable::GradingRecord;
 
 pub const MASTER_CFG_FILENAME: &str = "kasm.toml";
-pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{2}).+([0-9]{2})"#;
+pub const DEFAULT_GROUPS_REGEX: &str = r#"([0-9]{1,3})"#;
 pub const UNPACK_PATH_FILENAME_BASE: &str = "unpack_";
 pub const UNPACK_CSV_FILENAME: &str = ".filtered.csv";
 pub const UNPACK_GRADES_FILENAME: &str = "grades.toml";

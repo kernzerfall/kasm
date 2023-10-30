@@ -265,7 +265,7 @@ impl MoodleFetcher {
         let participants = self.get_group_mappings(dl_id)?;
         let submissions = self.get_submissions_list(dl_id)?;
 
-        let nr_regex = regex::Regex::new("([0-9]{2})")?;
+        let nr_regex = regex::Regex::new("([0-9]{1,2})")?;
 
         let base_path = PathBuf::from(
             UNPACK_PATH_FILENAME_BASE.to_string()
