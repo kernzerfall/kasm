@@ -38,7 +38,7 @@ pub fn grade(master: &MasterCfg, cfg: &GradeCmd, grades: &Grades) -> Result<(), 
         .iter_mut()
         .find(|gd| {
             reg.captures(&gd.target).map_or(false, |caps| {
-                caps.get(2).map_or(false, |cap| cap.as_str() == target)
+                caps.get(1).map_or(false, |cap| cap.as_str() == target)
             })
         })
         .map(|gd| {
