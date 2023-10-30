@@ -351,7 +351,7 @@ impl MoodleFetcher {
 
         groups.iter().for_each(|(&gid, &gname)| {
             grades_arr.push(Grade {
-                grade: "0".to_string(),
+                grade: "".to_string(),
                 internal_id: Some(gid.to_owned()),
                 members: group_user_mappings.get(gid).cloned(),
                 target: gname.to_owned(),
@@ -404,6 +404,11 @@ impl MoodleFetcher {
             let gname = userdata.get("groupname").unwrap().as_str().unwrap();
 
             info!("dry-run: would set {grade} for ({uname}) AND Group ({gname})");
+            return Ok(());
+        }
+
+        if grade.is_empty() {
+            warn!("skipping {userid} because of empty grade");
             return Ok(());
         }
 
