@@ -15,7 +15,6 @@ pub fn setup(master: &MasterCfg) -> core::result::Result<(), Box<dyn Error>> {
 
     if let Some(course) = &master.moodle_course_id {
         info!("the saved course id is {}.", course);
-        print!("overwrite? (y/N) > ");
         overwrite_course = inquire::Confirm::new("overwrite? (y/n) > ")
             .prompt_skippable()?
             .unwrap_or(false);
@@ -162,7 +161,6 @@ impl MoodleFetcher {
             .send()?;
 
         let rt = &resp.text()?;
-        //let rt = include_str!("../target/submissions.json");
         let parsed: Value = serde_json::from_str(rt)?;
 
         let gid_plug_arrs: HashMap<String, Vec<Value>> = parsed
@@ -219,7 +217,6 @@ impl MoodleFetcher {
             .send()?;
         let rt = resp.text()?;
 
-        //let rt = include_str!("../target/participants.json");
         let parsed: Value = serde_json::from_str(&rt)?;
         let mut group_members_mappings: HashMap<String, Vec<String>> = HashMap::new();
 
