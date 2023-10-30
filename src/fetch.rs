@@ -1,7 +1,16 @@
 use serde_json::Value;
-use std::{collections::{HashMap, HashSet}, error::Error, path::PathBuf, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    error::Error,
+    path::PathBuf,
+    time::Duration,
+};
 
-use crate::{config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE}, gradingtable::GradingRecord, args::{Cli, FetchCmd}};
+use crate::{
+    args::{Cli, FetchCmd},
+    config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE},
+    gradingtable::GradingRecord,
+};
 use log::{error, info, warn};
 
 const KEYRING_SERVICE_NAME: &str = "kasm-moodle-token";
@@ -248,7 +257,7 @@ impl MoodleFetcher {
         Ok((groups, group_members_mappings))
     }
 
-    pub fn filter_csv_groups(cfg: &FetchCmd) -> Result<HashSet::<String>, Box<dyn Error>> {
+    pub fn filter_csv_groups(cfg: &FetchCmd) -> Result<HashSet<String>, Box<dyn Error>> {
         let grading_table = GradingRecord::from_csv(&cfg.csv)?;
         let mut csv_groups = HashSet::<String>::new();
         for idx in cfg.from_line..=cfg.to_line {
@@ -311,11 +320,10 @@ impl MoodleFetcher {
         };
         self.gen_grading_files(&mut config, &filtered_participants, &participants.1)?;
 
-
         let filtered_files: Vec<SubmissionFileMap> = filtered_participants
             .iter()
             .filter(|(_, v)| group_set.contains(v.as_str()))
-            .filter_map(|(gid, gname)| { 
+            .filter_map(|(gid, gname)| {
                 let group_path = base_path.join(gname);
                 Some(
                     submissions
@@ -329,11 +337,11 @@ impl MoodleFetcher {
                                 group_name: gname.to_string(),
                             }
                             .into()
-                        })
+                        }),
                 )
             })
             .flatten()
-            .collect(); 
+            .collect();
 
         info!("downloading {} file(s)", filtered_files.len());
         for file in &filtered_files {
