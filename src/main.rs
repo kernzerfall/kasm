@@ -62,9 +62,9 @@ fn main() {
         Verb::SetupFetch => {
             kasm::fetch::setup(&master).unwrap();
         }
-        Verb::Fetch(_cfg) => {
+        Verb::Fetch(cfg) => {
             kasm::fetch::MoodleFetcher::new(&master)
-                .interactive_dl()
+                .interactive_dl(cfg)
                 .unwrap();
         }
         Verb::Push(cfg) => {
