@@ -66,7 +66,7 @@ pub fn repack(master: &MasterCfg, cfg: &RepackDir) -> Result<(), Box<dyn Error>>
     }
 
     let grading_table =
-        GradingRecord::from_csv(&unpacked_path.join(UNPACK_CSV_FILENAME)).unwrap_or(Vec::new());
+        GradingRecord::from_csv(&unpacked_path.join(UNPACK_CSV_FILENAME)).unwrap_or_default();
 
     let csv_writer = if grades.source == Source::CsvAndZip {
         Some(

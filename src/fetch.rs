@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    args::{Cli, FetchCmd},
+    args::{FetchCmd},
     config::{Grade, Grades, MasterCfg, UNPACK_GRADES_FILENAME, UNPACK_PATH_FILENAME_BASE},
     gradingtable::GradingRecord,
 };
@@ -247,7 +247,7 @@ impl MoodleFetcher {
             .for_each(|(userid, gname, gid, _)| {
                 group_members_mappings
                     .entry(gid.to_string())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(userid.to_string());
                 groups
                     .entry(gid.to_string())
@@ -479,7 +479,7 @@ impl MoodleFetcher {
             let members = record.members.clone().unwrap();
             self.set_grade_for(
                 assign_id.to_owned(),
-                members.get(0).unwrap().to_owned(),
+                members.first().unwrap().to_owned(),
                 record.grade.to_owned(),
                 dry_run,
             )
