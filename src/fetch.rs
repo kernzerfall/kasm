@@ -336,8 +336,6 @@ impl MoodleFetcher {
         }
 
         info!("done");
-        warn!("note: repacking autofetched files is not implemented yet!");
-
         Ok(())
     }
     fn gen_grading_files(
