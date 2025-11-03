@@ -29,10 +29,10 @@ cargo install --locked --path .
 
 ### Video Examples
 
-- [Setting up (autofetch)](https://s.georgar.de/kasm/00-autofetch-setup.webm)
-- [Fetching assignments](https://s.georgar.de/kasm/01-autofetch-downloading-sheets.webm)
-- [Grading](https://s.georgar.de/kasm/02-autofetch-grade.webm)
-- [Publishing feedback and grades](https://s.georgar.de/kasm/03-autofetch-publish.webm)
+- [Setting up (autofetch)](https://static.kernzerfall.eu/kasm/00-autofetch-setup.webm)
+- [Fetching assignments](https://static.kernzerfall.eu/kasm/01-autofetch-downloading-sheets.webm)
+- [Grading](https://static.kernzerfall.eu/kasm/02-autofetch-grade.webm)
+- [Publishing feedback and grades](https://static.kernzerfall.eu/kasm/03-autofetch-publish.webm)
 
 ### Brief overview
 - The initialization procedure creates a reusable master config, which contains info such as
